@@ -5,11 +5,47 @@ import { Query } from 'react-native-appwrite';
 export const fetchExplorePosts = () =>
   databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.posts, [
     Query.equal('type', 'post'),
-    Query.orderDesc('createdAt'),
+    Query.select([
+      '*',          // all reel fields
+      'leader.*',   // 👈 populate leader profile
+    ]),
+    Query.orderDesc('$createdAt'),
   ]);
 
 export const fetchReels = () =>
   databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.posts, [
     Query.equal('type', 'reel'),
-    Query.orderDesc('createdAt'),
+    Query.select([
+      '*',          // all reel fields
+      'leader.*',   // 👈 populate leader profile
+    ]),
+    Query.orderDesc('$createdAt'),
+  ]);
+
+/**
+ * Fetch posts by leader ID
+ */
+export const fetchPostsByLeader = (leaderId: string) =>
+  databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.posts, [
+    Query.equal('leader', leaderId),
+    Query.equal('type', 'post'),
+    Query.select([
+      '*',
+      'leader.*',
+    ]),
+    Query.orderDesc('$createdAt'),
+  ]);
+
+/**
+ * Fetch reels by leader ID
+ */
+export const fetchReelsByLeader = (leaderId: string) =>
+  databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.posts, [
+    Query.equal('leader', leaderId),
+    Query.equal('type', 'reel'),
+    Query.select([
+      '*',
+      'leader.*',
+    ]),
+    Query.orderDesc('$createdAt'),
   ]);

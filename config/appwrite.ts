@@ -1,8 +1,10 @@
+import { BUCKET_ID, DATABASE_ID, ENDPOINT, PROJECT_ID } from "@/constants/env";
+
 export const APPWRITE_CONFIG = {
-    endpoint: 'https://cloud.appwrite.io/v1',
-    projectId: 'YOUR_PROJECT_ID',
+    endpoint: ENDPOINT,
+    projectId: PROJECT_ID,
   
-    databaseId: 'faithconnect_db',
+    databaseId: DATABASE_ID,
   
     collections: {
       users: 'users_profile',
@@ -15,9 +17,9 @@ export const APPWRITE_CONFIG = {
     },
   
     buckets: {
-      profilePhotos: 'profile_photos',
-      postMedia: 'post_media',
-      reelsMedia: 'reels_media',
+      profilePhotos: BUCKET_ID,
+      postMedia: BUCKET_ID,
+      reelsMedia: BUCKET_ID,
     },
   };
   

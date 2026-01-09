@@ -19,7 +19,6 @@ export const followLeader = async (
     {
       worshiper: worshiperId,
       leader: leaderId,
-      createdAt: new Date().toISOString(),
     }
   );
 };
@@ -64,3 +63,18 @@ export const checkIsFollowing = async (
 
   return res.documents.length > 0 ? res.documents[0] : null;
 };
+
+
+export const fetchMyWorshipers = async (
+  leaderId: string
+) => {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    FOLLOWS_COLLECTION_ID,
+    [
+      Query.equal('leader', leaderId)
+    ]
+  );
+
+  return res.documents.length > 0 ? res.documents : []
+}

@@ -4,6 +4,7 @@ import { Models } from 'react-native-appwrite';
 import * as authService from '../services/auth.service';
 
 const USER_KEY = 'user_info';
+const PROFILE_KEY = 'user_profile';
 
 async function storeUser(user: Models.User<Models.Preferences>) {
   try {
@@ -16,6 +17,14 @@ async function storeUser(user: Models.User<Models.Preferences>) {
 async function clearStoredUser() {
   try {
     await removeItem(USER_KEY);
+  } catch {
+    // Ignore
+  }
+}
+
+async function clearStoredProfile() {
+  try {
+    await removeItem(PROFILE_KEY);
   } catch {
     // Ignore
   }
@@ -98,6 +107,7 @@ const authSlice = createSlice({
     clearAuth: (state) => {
       state.user = null;
       clearStoredUser();
+      clearStoredProfile();
     },
   },
   extraReducers: (builder) => {
