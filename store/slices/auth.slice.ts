@@ -1,10 +1,84 @@
+import { removeItem, setItem } from '@/lib/manageStorage';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { Models } from 'react-native-appwrite';
 import * as authService from '../services/auth.service';
 
+const USER_KEY = 'user_info';
+
+async function storeUser(user: Models.User<Models.Preferences>) {
+  try {
+    await setItem(USER_KEY, user);
+  } catch {
+    // Fail silently; not critical for UX
+  }
+}
+
+async function clearStoredUser() {
+  try {
+    await removeItem(USER_KEY);
+  } catch {
+    // Ignore
+  }
+}
+
 export const fetchSession = createAsyncThunk(
   'auth/fetchSession',
-  async () => authService.getCurrentUser()
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await authService.getCurrentUser();
+      await storeUser(user);
+      return user;
+    } catch (error: any) {
+      await clearStoredUser();
+      return rejectWithValue(error?.message || 'Failed to fetch session');
+    }
+  }
+);
+
+export const login = createAsyncThunk(
+  'auth/login',
+  async (
+    { email, password }: { email: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      console.log('Login thunk started');
+      console.log('Attempting login for email:', email);
+      await authService.login(email, password);
+      console.log('Login successful, fetching current user');
+      const user = await authService.getCurrentUser();
+      console.log('Fetched user after login:', user);
+      await storeUser(user);
+      return user;
+    } catch (error: any) {
+      await clearStoredUser();
+      console.log('Error during login:', error);
+      return rejectWithValue(error?.message || 'Login failed');
+    }
+  }
+);
+
+export const register = createAsyncThunk(
+  'auth/register',
+  async (
+    { email, password }: { email: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      console.log('Register thunk started');
+      console.log('Registering user with email:', email);
+      await authService.register(email, password);
+      console.log('User registered, now fetching user info');
+      const user = await authService.getCurrentUser();
+      console.log('Fetched user after registration:', user);
+      await storeUser(user);
+      return user;
+    } catch (error: any) {
+      await clearStoredUser();
+      console.log('Error during registration:', error);
+      return rejectWithValue(error?.message || 'Registration failed');
+    }
+  }
 );
 
 interface AuthState {
@@ -12,12 +86,18 @@ interface AuthState {
   loading: boolean;
 }
 
+const initialState: AuthState = {
+  user: null,
+  loading: false,
+};
+
 const authSlice = createSlice({
   name: 'auth',
-  initialState: { user: null, loading: false } as AuthState,
+  initialState,
   reducers: {
     clearAuth: (state) => {
       state.user = null;
+      clearStoredUser();
     },
   },
   extraReducers: (builder) => {
@@ -30,6 +110,35 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchSession.rejected, (state) => {
+        state.user = null;
+        state.loading = false;
+      })
+      .addCase(login.pending, (state) => {
+        console.log('[Auth] Login pending...');
+        state.loading = true;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        console.log('[Auth] Login fulfilled:', action.payload);
+        state.user = action.payload as unknown as Models.User<Models.Preferences>;
+        state.loading = false;
+      })
+      .addCase(login.rejected, (state, action) => {
+        console.log('[Auth] Login rejected:', action.error || action.payload);
+        state.user = null;
+        state.loading = false;
+      })
+      .addCase(register.pending, (state) => {
+        console.log('[Auth] Register pending...');
+        state.loading = true;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        console.log('[Auth] Register fulfilled:', action.payload);
+        state.user = action.payload as unknown as Models.User<Models.Preferences>;
+        state.loading = false;
+      })
+      .addCase(register.rejected, (state, action) => {
+        console.log('[Auth] Register rejected:', action.error || action.payload);
+        state.user = null;
         state.loading = false;
       });
   },
