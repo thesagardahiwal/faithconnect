@@ -8,7 +8,7 @@ import { createUserProfile } from '@/store/services/user.service';
 import { UserRole } from '@/types/user.types';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 
 export default function RoleSetupScreen() {
   const router = useRouter();
@@ -68,64 +68,71 @@ export default function RoleSetupScreen() {
   }, [user, loadProfile, profile, router]);
 
   return (
-    <View className="flex-1 px-6 pt-16 bg-background dark:bg-dark-background">
-      {step === 'choose-role' && (
-        <>
-          <AuthHeader
-            title="Choose your path"
-            subtitle="How would you like to continue?"
-          />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 32 : 0}
+      className="bg-background dark:bg-dark-background"
+    >
+      <View className="flex-1 px-6 pt-16">
+        {step === 'choose-role' && (
+          <>
+            <AuthHeader
+              title="Choose your path"
+              subtitle="How would you like to continue?"
+            />
 
-          <RoleCard
-            title="Continue as Worshiper"
-            description="Follow leaders and receive inspiration"
-            onPress={() => handleRoleSelect('worshiper')}
-          />
+            <RoleCard
+              title="Continue as Worshiper"
+              description="Follow leaders and receive inspiration"
+              onPress={() => handleRoleSelect('worshiper')}
+            />
 
-          <RoleCard
-            title="Continue as Religious Leader"
-            description="Share teachings and guide your followers"
-            onPress={() => handleRoleSelect('leader')}
-          />
-        </>
-      )}
+            <RoleCard
+              title="Continue as Religious Leader"
+              description="Share teachings and guide your followers"
+              onPress={() => handleRoleSelect('leader')}
+            />
+          </>
+        )}
 
-      {step === 'details' && (
-        <>
-          <AuthHeader
-            title={
-              selectedRole === 'worshiper'
-                ? "Worshiper Details"
-                : "Religious Leader Details"
-            }
-            subtitle={
-              selectedRole === 'worshiper'
-                ? "Tell us about yourself to continue"
-                : "Tell us about yourself to continue"
-            }
-          />
-          <AppInput
-            label="Your name"
-            placeholder="Enter your name"
-            value={name}
-            onChangeText={setName}
-            editable={!loading}
-          />
-          <AppInput
-            label="Your Faith"
-            placeholder="Enter your faith"
-            value={faith}
-            onChangeText={setFaith}
-            editable={!loading}
-          />
-          <AppButton
-            title="Continue"
-            variant="primary"
-            loading={loading}
-            onPress={handleCreateProfile}
-          />
-        </>
-      )}
-    </View>
+        {step === 'details' && (
+          <>
+            <AuthHeader
+              title={
+                selectedRole === 'worshiper'
+                  ? "Worshiper Details"
+                  : "Religious Leader Details"
+              }
+              subtitle={
+                selectedRole === 'worshiper'
+                  ? "Tell us about yourself to continue"
+                  : "Tell us about yourself to continue"
+              }
+            />
+            <AppInput
+              label="Your name"
+              placeholder="Enter your name"
+              value={name}
+              onChangeText={setName}
+              editable={!loading}
+            />
+            <AppInput
+              label="Your Faith"
+              placeholder="Enter your faith"
+              value={faith}
+              onChangeText={setFaith}
+              editable={!loading}
+            />
+            <AppButton
+              title="Continue"
+              variant="primary"
+              loading={loading}
+              onPress={handleCreateProfile}
+            />
+          </>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 }

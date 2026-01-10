@@ -1,4 +1,5 @@
 import { removeItem, setItem } from '@/lib/manageStorage';
+import { toast } from "@/lib/toastShow";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { Models } from 'react-native-appwrite';
 import * as authService from '../services/auth.service';
@@ -119,37 +120,67 @@ const authSlice = createSlice({
         state.user = action.payload as unknown as Models.User<Models.Preferences>;
         state.loading = false;
       })
-      .addCase(fetchSession.rejected, (state) => {
+      .addCase(fetchSession.rejected, (state, action) => {
         state.user = null;
         state.loading = false;
+        toast({
+          type: "error",
+          text1: "Session Load Failed",
+          text2:
+            (typeof action.payload === 'string'
+              ? action.payload
+              : 'Could not restore user session, please login again.') as string,
+        });
       })
       .addCase(login.pending, (state) => {
-        console.log('[Auth] Login pending...');
         state.loading = true;
       })
       .addCase(login.fulfilled, (state, action) => {
-        console.log('[Auth] Login fulfilled:', action.payload);
         state.user = action.payload as unknown as Models.User<Models.Preferences>;
+        toast({
+          type: "success",
+          text1: "Login Successful",
+          text2: "Welcome back! You're signed in.",
+        });
         state.loading = false;
       })
       .addCase(login.rejected, (state, action) => {
-        console.log('[Auth] Login rejected:', action.error || action.payload);
         state.user = null;
         state.loading = false;
+        toast({
+          type: "error",
+          text1: "Login Failed",
+          text2:
+            (typeof action.payload === 'string'
+              ? action.payload
+              : action.error?.message ||
+                "Invalid email or password. Please try again.") as string,
+        });
       })
       .addCase(register.pending, (state) => {
-        console.log('[Auth] Register pending...');
         state.loading = true;
       })
       .addCase(register.fulfilled, (state, action) => {
-        console.log('[Auth] Register fulfilled:', action.payload);
         state.user = action.payload as unknown as Models.User<Models.Preferences>;
+        toast({
+          type: "success",
+          text1: "Registration Successful!",
+          text2: "Welcome to FaithConnect! Your account has been created.",
+        });
         state.loading = false;
       })
       .addCase(register.rejected, (state, action) => {
-        console.log('[Auth] Register rejected:', action.error || action.payload);
         state.user = null;
         state.loading = false;
+        toast({
+          type: "error",
+          text1: "Registration Failed",
+          text2:
+            (typeof action.payload === 'string'
+              ? action.payload
+              : action.error?.message ||
+                "Unable to create account. Please check your info and try again.") as string,
+        });
       });
   },
 });

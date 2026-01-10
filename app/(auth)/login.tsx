@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -24,34 +24,41 @@ export default function LoginScreen() {
   }, [user, router, loadProfile]);
 
   return (
-    <View className="flex-1 justify-center px-6 bg-background dark:bg-dark-background">
-      <AppCard>
-        <AuthHeader
-          title="Welcome back"
-          subtitle="Sign in to continue your spiritual journey"
-        />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 32 : 0}
+      className="bg-background dark:bg-dark-background"
+    >
+      <View className="flex-1 justify-center px-6">
+        <AppCard>
+          <AuthHeader
+            title="Welcome back"
+            subtitle="Sign in to continue your spiritual journey"
+          />
 
-        <AppInput label="Email" value={email} onChangeText={setEmail} />
-        <AppInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+          <AppInput label="Email" value={email} onChangeText={setEmail} />
+          <AppInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        <AppButton
-          title="Sign In"
-          loading={loading}
-          onPress={() => login(email, password)}
-        />
+          <AppButton
+            title="Sign In"
+            loading={loading}
+            onPress={() => login(email, password)}
+          />
 
-        <Pressable onPress={() => router.push('/(auth)/register')}>
-          <Text className="mt-4 text-center text-primary dark:text-dark-primary">
-            Don’t have an account? Register
-          </Text>
-        </Pressable>
-     
-      </AppCard>
-    </View>
+          <Pressable onPress={() => router.push('/(auth)/register')}>
+            <Text className="mt-4 text-center text-primary dark:text-dark-primary">
+              Don’t have an account? Register
+            </Text>
+          </Pressable>
+      
+        </AppCard>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
