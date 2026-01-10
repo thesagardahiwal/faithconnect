@@ -1,36 +1,43 @@
-import Header from '@/components/common/Header';
+import ChatHeader from '@/components/chat/ChatHeader';
+import MessageBubble from '@/components/chat/MessageBubble';
+import MessageInput from '@/components/chat/MessageInput';
 import Screen from '@/components/common/Screen';
-import { AppButton } from '@/components/ui/AppButton';
-import { useMessages } from '@/hooks/useMessages';
+import { useChat } from '@/hooks/useChat';
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { useEffect } from 'react';
+import { FlatList } from 'react-native';
 
 export default function ChatScreen() {
-  const { chatId } = useLocalSearchParams<{ chatId: string }>();
-  const { sendMessage } = useMessages();
-  const [text, setText] = useState('');
+  const { chatId, profileId } = useLocalSearchParams<{ chatId: string, profileId: string }>();
+  const { messages, sendMessage, sending, loadMessages } = useChat(
+    chatId!,
+    profileId!
+  );
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
+
+  
 
   return (
     <Screen>
-      <Header title="Chat" />
+      <ChatHeader title="Chat" />
 
-      <View className="flex-1" />
-
-      <TextInput
-        value={text}
-        onChangeText={setText}
-        className="border border-border dark:border-dark-border rounded-xl p-3"
-        placeholder="Type a message"
+      <FlatList
+        data={messages}
+        onRefresh={loadMessages}
+        refreshing={false}
+        keyExtractor={(item) => item.$id}
+        renderItem={({ item }) => (
+          <MessageBubble
+            text={item.text}
+            isMine={item.sender === profileId}
+          />
+        )}
+        contentContainerStyle={{ padding: 16 }}
       />
 
-      <AppButton
-        title="Send"
-        onPress={() => {
-          sendMessage(chatId, 'leader-id', text);
-          setText('');
-        }}
-      />
+      <MessageInput onSend={sendMessage} disabled={sending} />
     </Screen>
   );
 }

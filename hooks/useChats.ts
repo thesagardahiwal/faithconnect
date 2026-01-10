@@ -3,7 +3,7 @@ import { loadChats } from '@/store/slices/chat.slice';
 
 export const useChats = () => {
   const dispatch = useAppDispatch();
-  const { list } = useAppSelector((state) => state.chats);
+  const { list, loading } = useAppSelector((state) => state.chats);
 
   const loadUserChats = (userId: string) => {
     dispatch(loadChats(userId));
@@ -11,6 +11,7 @@ export const useChats = () => {
 
   return {
     chats: list,
+    loading,
     loadUserChats,
   };
 };

@@ -45,7 +45,7 @@ export default function RoleSetupScreen() {
         faith: faith.trim(),
       });
       router.replace('/');
-    } catch (error) {
+    } catch {
       Alert.alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

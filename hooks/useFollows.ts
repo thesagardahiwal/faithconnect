@@ -8,7 +8,7 @@ import {
 export const useFollows = () => {
   const dispatch = useAppDispatch();
   const { myLeaders, myWorshiper, loading, togglingLeaderId } = useAppSelector((state) => state.follows);
-
+  
   const loadMyLeaders = (worshiperId: string) => {
     dispatch(fetchMyLeaders(worshiperId));
   };

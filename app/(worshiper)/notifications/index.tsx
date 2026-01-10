@@ -1,9 +1,9 @@
 import Header from '@/components/common/Header';
 import Screen from '@/components/common/Screen';
-import { useNotifications } from '@/hooks/useNotifications';
+// import { useNotifications } from '@/hooks/useNotifications';
 
 export default function Notifications() {
-  const { notifications } = useNotifications();
+  // const { notifications } = useNotifications();
 
   return (
     <Screen>

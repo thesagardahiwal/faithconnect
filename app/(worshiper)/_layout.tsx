@@ -84,6 +84,12 @@ export default function WorshiperLayout() {
             }}
         />
         <Tabs.Screen
+            name='chats/[chatId]'
+            options={{
+                href: null
+            }}
+        />
+        <Tabs.Screen
             name='notifications/index'
             options={{
                 href: null

@@ -1,7 +1,7 @@
 import { getMediaUrl } from '@/store/services/media.service';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+// import { useRouter } from 'expo-router';
 import { Dimensions, Pressable, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -14,7 +14,7 @@ interface ReelGridItemProps {
 }
 
 export default function ReelGridItem({ reel }: ReelGridItemProps) {
-  const router = useRouter();
+  // const router = useRouter();
 
   // Appwrite video preview frame (works as thumbnail)
   const thumbnailUrl = reel.mediaUrl

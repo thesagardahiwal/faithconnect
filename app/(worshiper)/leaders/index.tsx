@@ -1,3 +1,4 @@
+import StartChatButton from '@/components/chat/StartChatButton';
 import EmptyState from '@/components/common/EmptyState';
 import Header from '@/components/common/Header';
 import Screen from '@/components/common/Screen';
@@ -6,6 +7,7 @@ import { useFollows } from '@/hooks/useFollows';
 import { useLeaders } from '@/hooks/useLeaders';
 import { useUser } from '@/hooks/useUser';
 import { storage } from '@/lib/appwrite';
+import { UserProfile } from '@/types/user.types';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -21,8 +23,10 @@ function getProfileImageUrl(imgId: string | undefined): string | null {
   }
 }
 
-function LeaderCard({ leader, isFollowed, isToggling, onPress, onFollowPress }: {
+function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPress, onFollowPress }: {
   leader: any;
+  worshiper: UserProfile;
+  isOwener?: boolean;
   isFollowed: boolean;
   isToggling: boolean;
   onPress: () => void;
@@ -100,32 +104,37 @@ function LeaderCard({ leader, isFollowed, isToggling, onPress, onFollowPress }: 
         </View>
 
         {/* Follow Button */}
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation();
-            if (!isToggling) {
-              onFollowPress();
-            }
-          }}
-          disabled={isToggling}
-          className="px-4 py-2 rounded-full border flex-row items-center"
-          style={{
-            borderColor: isFollowed ? '#6cbf43' : '#2667c9',
-            backgroundColor: isFollowed ? '#f0f9f0' : 'transparent',
-            opacity: isToggling ? 0.7 : 1,
-          }}
-        >
-          {isToggling ? (
-            <ActivityIndicator size="small" color={isFollowed ? '#6cbf43' : '#2667c9'} />
-          ) : isFollowed ? (
-            <View className="flex-row items-center">
-              <Ionicons name="checkmark-circle" size={18} color="#6cbf43" style={{ marginRight: 4 }} />
-              <Text className="text-green-700 font-medium text-sm">Following</Text>
-            </View>
-          ) : (
-            <Text className="text-accent font-medium text-sm">Follow</Text>
-          )}
-        </Pressable>
+        {!isOwener && (
+          <View className='flex-row items-center'>
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                if (!isToggling) {
+                  onFollowPress();
+                }
+              }}
+              disabled={isToggling}
+              className="px-4 py-2 rounded-full border flex-row items-center"
+              style={{
+                borderColor: isFollowed ? '#6cbf43' : '#2667c9',
+                backgroundColor: isFollowed ? '#f0f9f0' : 'transparent',
+                opacity: isToggling ? 0.7 : 1,
+              }}
+            >
+              {isToggling ? (
+                <ActivityIndicator size="small" color={isFollowed ? '#6cbf43' : '#2667c9'} />
+              ) : isFollowed ? (
+                <View className="flex-row items-center">
+                  <Ionicons name="checkmark-circle" size={18} color="#6cbf43" style={{ marginRight: 4 }} />
+                  <Text className="text-green-700 font-medium text-sm">Following</Text>
+                </View>
+              ) : (
+                <Text className="text-accent font-medium text-sm">Follow</Text>
+              )}
+            </Pressable>
+            <StartChatButton isMeLeader={worshiper.role === "leader"} leaderId={leader.$id} worshiperId={worshiper.$id} compact={true}/>
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -149,9 +158,9 @@ export default function ExploreLeaders() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await loadAllLeaders();
+      loadAllLeaders();
       if (profile?.$id) {
-        await loadMyLeaders(profile.$id);
+        loadMyLeaders(profile.$id);
       }
     } finally {
       setRefreshing(false);
@@ -164,7 +173,7 @@ export default function ExploreLeaders() {
   );
 
   const handleLeaderPress = (leaderId: string) => {
-    router.push(`/(worshiper)/leaders/${leaderId}`);
+    router.push(`/${profile?.role === "worshiper" ? "(worshiper)" : "(leader)"}/leaders/${leaderId}`);
   };
 
   const handleFollowPress = (leader: any) => {
@@ -218,6 +227,8 @@ export default function ExploreLeaders() {
           renderItem={({ item }) => (
             <LeaderCard
               leader={item}
+              worshiper={profile as UserProfile}
+              isOwener = {profile?.$id === item.$id}
               isFollowed={isFollowed(item.$id)}
               isToggling={isToggling(item.$id)}
               onPress={() => handleLeaderPress(item.$id)}

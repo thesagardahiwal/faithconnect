@@ -1,7 +1,8 @@
-import LeaderProfile from "@/app/(worshiper)/leaders/[leaderId]";
+import LeaderProfile from "@/components/common/LeaderProfile";
 
-export default function LeaderProfileScreen () {
-    return (
-        <LeaderProfile/>
-    )
+export default function LeaderProfileLayout() {
+  return (
+    <LeaderProfile/>
+  );
+  
 }

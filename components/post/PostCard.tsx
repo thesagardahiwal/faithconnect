@@ -41,7 +41,7 @@ function getProfileImageUrl(imgId: string): string | null {
   if (!imgId) return null;
   try {
     return storage.getFileViewURL(APPWRITE_CONFIG.buckets.postMedia, imgId).toString();
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -368,7 +368,7 @@ export default function PostCard({ post }: any) {
               textAlign: "right"
             }}
           >
-            {likesCount}
+            {likesCount || post.likesCount}
           </Text>
           {likeLoading && (
             <ActivityIndicator
