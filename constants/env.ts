@@ -1,4 +1,8 @@
-export const PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || '';
-export const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || '';
-export const ENDPOINT = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || '';
-export const BUCKET_ID = process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID || '';
+import Constants from 'expo-constants';
+
+const appwriteConfig = Constants.expoConfig?.extra?.appwrite;
+
+export const PROJECT_ID = appwriteConfig?.projectId || '';
+export const DATABASE_ID = appwriteConfig?.databaseId || '';
+export const ENDPOINT = appwriteConfig?.endpoint || '';
+export const BUCKET_ID = appwriteConfig?.bucketId || '';

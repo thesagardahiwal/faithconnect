@@ -11,7 +11,8 @@ const storeSession = async (session: any) => {
   try {
     await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
   } catch (err) {
-    // Optionally log error or report to monitoring
+    console.error('Error storing session:', err);
+    throw err;
   }
 };
 
@@ -22,7 +23,8 @@ const clearSession = async () => {
   try {
     await AsyncStorage.removeItem(SESSION_KEY);
   } catch (err) {
-    // Optionally log error or report to monitoring
+    console.error('Error clearing session:', err);
+    throw err;
   }
 };
 
@@ -34,6 +36,7 @@ const getStoredSession = async () => {
     const sessionStr = await AsyncStorage.getItem(SESSION_KEY);
     return sessionStr ? JSON.parse(sessionStr) : null;
   } catch (err) {
+    console.error('Error getting stored session:', err);
     return null;
   }
 };
@@ -43,9 +46,28 @@ const getStoredSession = async () => {
  * On success, store session in secure storage.
  */
 export const login = async (email: string, password: string) => {
-  const session = await account.createEmailPasswordSession(email, password);
-  await storeSession(session);
-  return session;
+  try {
+    // Always try to delete existing session
+    await account.deleteSession('current');
+  } catch (err) {
+    // It's ok if no session exists; log & proceed.
+    if (
+      err &&
+      typeof err === 'object' &&
+      'message' in err
+    ) {
+      console.warn('No existing session to delete on login:', (err as any).message);
+    }
+  }
+
+  try {
+    const session = await account.createEmailPasswordSession(email, password);
+    await storeSession(session);
+    return session;
+  } catch (err) {
+    console.error('Login failed:', err);
+    throw err;
+  }
 };
 
 /**
@@ -53,18 +75,52 @@ export const login = async (email: string, password: string) => {
  * On success, store session in secure storage.
  */
 export const register = async (email: string, password: string) => {
-  await account.create(ID.unique(), email, password);
-  const session = await account.createEmailPasswordSession(email, password);
-  await storeSession(session);
-  return session;
+  try {
+    await account.deleteSession('current');
+  } catch (err) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'message' in err
+    ) {
+      console.warn('No existing session to delete on register:', (err as any).message);
+    }
+  }
+
+  try {
+    await account.create(ID.unique(), email, password);
+    const session = await account.createEmailPasswordSession(email, password);
+    await storeSession(session);
+    return session;
+  } catch (err) {
+    console.error('Register failed:', err);
+    throw err;
+  }
 };
 
 /**
  * Logout current session and clear stored session.
  */
 export const logout = async () => {
-  await account.deleteSession('current');
-  await clearSession();
+  try {
+    await account.deleteSession('current');
+  } catch (err) {
+    // User might already be logged out or session expired; log but proceed.
+    if (
+      err &&
+      typeof err === 'object' &&
+      'message' in err
+    ) {
+      console.warn('Error deleting session on logout:', (err as any).message);
+    }
+  }
+
+  try {
+    await clearSession();
+  } catch (err) {
+    console.error('Error clearing session on logout:', err);
+    // Not critical to throw here.
+  }
 };
 
 /**
@@ -72,13 +128,16 @@ export const logout = async () => {
  * Reads from cache and validates with server.
  */
 export const getCurrentUser = async () => {
-  // Use a cached user if available and not expired (optional, not in this scope)
-  // But always fetch fresh in mission-critical apps
   try {
     const user = await account.get();
     return user;
   } catch (err) {
-    await clearSession();
+    try {
+      await clearSession();
+    } catch (clearErr) {
+      console.error('Error clearing session during getCurrentUser:', clearErr);
+    }
+    console.error('Failed to get current user:', err);
     throw err;
   }
 };
@@ -89,18 +148,19 @@ export const getCurrentUser = async () => {
  * Returns true if session is valid, false otherwise.
  */
 export const checkSession = async (): Promise<boolean> => {
-  // Check if session exists in cache
   const cachedSession = await getStoredSession();
   if (!cachedSession) return false;
 
-  // Try to validate with the server
   try {
-    // This will throw if session is invalid or expired on the backend
     await account.get();
     return true;
   } catch (err) {
-    // Session expired or invalid, clear cache
-    await clearSession();
+    try {
+      await clearSession();
+    } catch (clearErr) {
+      console.error('Error clearing session during checkSession:', clearErr);
+    }
+    console.warn('Session check failed:', err);
     return false;
   }
 };

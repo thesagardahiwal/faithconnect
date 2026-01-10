@@ -20,7 +20,7 @@ export default function RootLayout() {
         // First, try to load user from storage
         const storedUser = await getItem(USER_KEY);
         const storedProfile = await getItem(PROFILE_KEY);
-        
+        console.log(storedUser, storedProfile)
         if (storedUser) {
           // User found in storage, verify session with API
           restoreSession();
