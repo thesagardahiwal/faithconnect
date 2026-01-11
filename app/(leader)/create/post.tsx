@@ -14,6 +14,7 @@ import { databases } from '@/lib/appwrite';
 import { ID } from "react-native-appwrite";
 
 import { APPWRITE_CONFIG } from '@/config/appwrite';
+import { useTheme } from '@/hooks/useTheme';
 import { useUser } from '@/hooks/useUser';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -21,6 +22,7 @@ export default function CreatePost() {
   const router = useRouter();
   const { profile } = useUser();
   const { pickImage, upload } = useMedia();
+  const { isDark } = useTheme();
 
   const [text, setText] = useState('');
   const [imageAsset, setImageAsset] = useState<any>(null);
@@ -123,6 +125,24 @@ export default function CreatePost() {
     }
   };
 
+  // Colors from tailwind config for runtime use (for custom stuff like progress bar):
+  const tailwindColors = {
+    background: isDark ? "#0F172A" : "#F9FAFB",
+    card: isDark ? "#111827" : "#FFFFFF",
+    cardAccent: isDark ? "#1E293B" : "#22244d", // fallback, use dark surface for dark, themed for light
+    text: isDark ? "#F9FAFB" : "#111827",
+    textSecondary: isDark ? "#9CA3AF" : "#6B7280",
+    accent: isDark ? "#E3C770" : "#C9A24D",
+    outline: isDark ? "#1F2937" : "#E5E7EB",
+    link: isDark ? "#5B8CFF" : "#2F6FED",
+    info: isDark ? "#B0DAFF" : "#81e1ff",
+    attention: isDark ? "#f59e42" : "#f59e42",
+    warn: isDark ? "#F87171" : "#DC2626",
+    gradientFrom: "#4a35df",
+    gradientTo: "#784ebc",
+    blueGray: isDark ? "#1e293b" : "#dbeafe"
+  };
+
   return (
     <Screen>
       <Header title="Share Inspiration" />
@@ -131,45 +151,59 @@ export default function CreatePost() {
         style={{flex: 1}}
         keyboardVerticalOffset={90}
       >
-        <View style={{
-          marginHorizontal: 20, 
-          marginTop: 24, 
-          marginBottom: 8, 
-          backgroundColor: '#22244d',
-          borderRadius: 18, 
-          padding: 22,
-          shadowColor: '#3b33b4',
-          shadowOpacity: 0.19,
-          shadowRadius: 6,
-          elevation: 4,
-        }}>
-          <View style={{flexDirection:'row', alignItems:'center', marginBottom: 10}}>
-            <Ionicons name="bulb-outline" size={28} color="#fcd34d" />
-            <Text style={{
-              fontWeight: '700',
-              fontSize: 20,
-              color: '#fff',
-              marginLeft: 10,
-              letterSpacing: 0.2
-            }}>
+        <View
+          className={`
+            mt-6 mb-2 rounded-2xl px-5 pt-6 pb-6
+            ${isDark ? "bg-dark-surface" : "bg-primary-soft"}
+            shadow-md
+          `}
+          style={{
+            marginHorizontal: 20,
+            marginTop: 24,
+            marginBottom: 8,
+            // backgroundColor: tailwindColors.cardAccent,
+            borderRadius: 17,
+            padding: 22,
+            // shadowColor: tailwindColors.link,
+            shadowOpacity: 0.14,
+            shadowRadius: 5,
+            elevation: 3,
+          }}
+        >
+          <View className="flex-row items-center mb-2.5">
+            <Ionicons name="bulb-outline" size={28} color={tailwindColors.accent} />
+            <Text className="font-bold text-xl ml-2 tracking-wider"
+              style={{
+                color: tailwindColors.text,
+                letterSpacing: 0.2
+              }}
+            >
               Inspire your followers!
             </Text>
           </View>
-          <Text style={{
-            color:'#dbeafe',
-            fontSize: 15,
-            marginBottom: 20,
-            opacity:0.8,
-          }}>
+          <Text
+            className={`mb-5 text-[15px] className='text-primary-soft dark:text-dark-primary`}
+          >
             Share a thoughtful message, scripture, or a beautiful moment.
           </Text>
 
-          <View style={{ marginBottom: 4 }}>
+          <View className="mb-1">
             <AppInput
               label={
                 <Text>
-                  <Text style={{ color: "#fff", fontWeight: "600" }}>Message </Text>
-                  <Text style={{ color: "#81e1ff", fontWeight: "400", fontSize: 13 }}>
+                  <Text
+                    className={`${isDark ? "text-dark-text-primary" : "text-text-primary"} font-semibold`}
+                    style={{ color: tailwindColors.text, fontWeight: "600" }}
+                  >
+                    Message{' '}
+                  </Text>
+                  <Text
+                    className={`text-xs`}
+                    style={{
+                      color: tailwindColors.info,
+                      fontWeight: "400"
+                    }}
+                  >
                     (required if no image)
                   </Text>
                 </Text>
@@ -178,54 +212,65 @@ export default function CreatePost() {
               onChangeText={handleTextChange}
               placeholder="Write something inspiring..."
               multiline={true}
+              className={`text-base ${isDark ? "text-dark-text-primary bg-dark-background" : "text-text-primary bg-background"}`}
             />
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View className="flex-row items-center justify-between">
               {textError ? (
-                <Text style={{ color: '#ff374e', fontSize: 13, fontWeight: '600' }}>
+                <Text className="text-error font-semibold text-xs">
                   {textError}
                 </Text>
               ) : (
-                <Text style={{
-                  color: text.length > 400 ? '#f59e42' : '#acacad',
-                  fontSize: 12,
-                  alignSelf: 'flex-end',
-                  fontVariant: ['tabular-nums'],
-                  letterSpacing: 0.3,
-                  fontWeight: text.length > 450 ? 'bold' : '500'
-                }}>
+                <Text
+                  className="text-xs font-medium"
+                  style={{
+                    color: text.length > 400
+                      ? tailwindColors.attention
+                      : tailwindColors.textSecondary,
+                    fontWeight: text.length > 450 ? 'bold' : '500',
+                    letterSpacing: 0.3,
+                    fontVariant: ['tabular-nums'],
+                    alignSelf: 'flex-end'
+                  }}
+                >
                   {text.length}/500
                 </Text>
               )}
               {/* Visual indicator bar for character count */}
-              <View style={{
-                flex: 1,
-                height: 6,
-                marginLeft: 12,
-                backgroundColor: '#2d3157',
-                borderRadius: 5,
-                overflow: 'hidden',
-              }}>
-                <View style={{
-                  width: `${Math.min(100, (text.length/500)*100)}%` as any,
-                  height: '100%' as any,
-                  backgroundColor:
-                    text.length < 400
-                      ? '#67e8f9'
-                      : text.length <= 500
-                      ? '#f59e42'
-                      : '#ff4764',
-                  borderRadius: 4,
-                  // Removed unsupported 'transition' property
-                }}/>
+              <View
+                className={`${isDark ? "bg-dark-background" : "bg-background"} flex-1 h-[6px] ml-3 rounded-lg overflow-hidden`}
+              >
+                <View
+                  style={{
+                    width: `${Math.min(100, (text.length/500)*100)}%`,
+                    height: '100%',
+                    backgroundColor:
+                      text.length < 400
+                        ? "#67e8f9"
+                        : text.length <= 500
+                        ? tailwindColors.attention
+                        : tailwindColors.warn,
+                    borderRadius: 4
+                  }}
+                />
               </View>
             </View>
           </View>
 
           <MediaPicker
             label={
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-                <MaterialCommunityIcons name="image-plus" size={26} color="#7ecddd" />
-                <Text style={{ color:'#84cbf7', fontSize: 16, fontWeight: '600' }}>
+              <View className="flex-row items-center gap-2.5">
+                <MaterialCommunityIcons name="image-plus" size={26} color={isDark ? "#67e8f9" : "#7ecddd"} />
+                <Text
+                  className="font-semibold text-base"
+                  style={{
+                    color: imageError
+                      ? tailwindColors.warn
+                      : isDark
+                        ? "#67e8f9"
+                        : "#84cbf7",
+                    fontWeight: imageAsset ? "bold" : "600",
+                  }}
+                >
                   {imageAsset ? 'Change Image' : 'Add Image (optional)'}
                 </Text>
               </View>
@@ -235,61 +280,79 @@ export default function CreatePost() {
               marginTop: 22,
               marginBottom: 10,
               borderWidth: imageError ? 2 : 1,
-              borderColor: imageError ? '#ff374e' : undefined,
-              backgroundColor: imageAsset ? '#1b183a' : undefined,
+              borderColor: imageError ? tailwindColors.warn : tailwindColors.outline,
+              backgroundColor: imageAsset
+                ? isDark
+                  ? "#1e253c"
+                  : "#f3f4fd"
+                : isDark
+                  ? "#111827"
+                  : "#fff"
             }}
             textStyle={{
-              color: imageError ? '#ff374e' : '#84cbf7',
-              fontWeight: imageAsset ? 'bold' : '600',
+              color: imageError
+                ? tailwindColors.warn
+                : isDark
+                  ? "#67e8f9"
+                  : "#84cbf7",
+              fontWeight: imageAsset ? "bold" : "600",
               fontSize: 16,
             }}
-            iconRight={imageAsset ? <Ionicons name="checkmark-circle" size={20} color="#67e8f9" /> : undefined}
+            iconRight={
+              imageAsset ?
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={isDark ? "#67e8f9" : "#67e8f9"}
+                /> : undefined
+            }
           />
-          {/* FIX: MediaPicker remains always enabled regardless of text value */}
           {imageAsset && (
-            <View style={{ marginTop: 7, marginBottom: 6 }}>
+            <View className="mt-2 mb-1.5">
               <UploadPreview asset={imageAsset} />
               <TouchableOpacity
                 onPress={handleRemoveImage}
-                style={{
-                  alignItems: 'center',
-                  flexDirection: 'row',
-                  justifyContent:'flex-end'
-                }}
+                className="flex-row items-center justify-end mt-1"
               >
-                <Ionicons name="close-circle" color="#fa6565" size={22} />
-                <Text style={{ color:'#fa6565', marginLeft: 5, fontSize:13 }}>
+                <Ionicons name="close-circle" color={tailwindColors.warn} size={22} />
+                <Text className="ml-1.5 text-xs" style={{ color: tailwindColors.warn }}>
                   Remove Image
                 </Text>
               </TouchableOpacity>
             </View>
           )}
           {imageError && (
-            <Text style={{color:'#ff374e', marginBottom:4, marginTop:0, fontSize: 13}}>{imageError}</Text>
+            <Text
+              className="text-error text-xs mb-1"
+              style={{
+                marginTop: 0,
+              }}
+            >
+              {imageError}
+            </Text>
           )}
 
-          <View style={{
-            marginTop: 33,
-            marginBottom: 2,
-            alignItems: 'center',
-          }}>
+          <View className="mt-8 mb-0.5 items-center">
             <AppButton
               title={loading ? 'Publishing...' : 'Publish Post'}
               loading={loading}
               onPress={handlePublish}
               style={{
                 width: '90%',
-                backgroundColor: 'linear-gradient(90deg,#4a35df,#784ebc)',
-                shadowColor: '#544bec',
-                shadowOpacity:0.26,
+                backgroundColor: 'transparent', // use bg-gradient for AppButton, otherwise fallback
+                borderRadius: 30,
+                shadowColor: tailwindColors.link,
+                shadowOpacity: 0.26,
                 shadowRadius: 8,
                 elevation: 3,
-                borderRadius: 30
+                overflow: 'hidden'
               }}
+              className="bg-gradient-to-r from-[#4a35df] to-[#784ebc]"
               textStyle={{
                 fontWeight: 'bold',
                 fontSize: 18,
                 letterSpacing: 1.3,
+                color: "#fff"
               }}
               iconLeft={<Ionicons name="send" color="#fff" size={22} />}
               disabled={loading}
@@ -297,19 +360,20 @@ export default function CreatePost() {
           </View>
         </View>
         <View
+          className="items-center"
           style={{
-            marginHorizontal: 26, 
+            marginHorizontal: 26,
             marginTop: 4,
-            alignItems: 'center',
-        }}>
-          <Text style={{
-            color:'#b2b8ee',
-            textAlign:'center',
-            marginTop:5,
-            marginBottom:18,
-            fontSize:13.3,
-            opacity:0.85,
-          }}>
+          }}
+        >
+          <Text
+            className="text-center text-sm mt-1 mb-4"
+            style={{
+              color: isDark ? "#b2b8ee" : "#5256a2",
+              opacity: 0.85,
+              fontSize: 13.3,
+            }}
+          >
             Your post will reach your followers instantly and motivate them in their journey.
           </Text>
         </View>

@@ -1,5 +1,6 @@
 import { getItem, setItem } from '@/lib/manageStorage';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchPostById } from '@/store/services/post.service';
 import { loadExploreFeed, loadReelsFeed } from '@/store/slices/post.slice';
 import { Post } from '@/types/post.types';
 import { useCallback, useEffect, useState } from 'react';
@@ -12,6 +13,21 @@ export const usePosts = () => {
   const { explore, reels, exploreLoading, reelsLoading } = useAppSelector((state) => state.posts);
   const [cachedExplore, setCachedExplore] = useState<Post[]>([]);
   const [cachedReels, setCachedReels] = useState<Post[]>([]);
+
+  const getPostById = async (postId: string) => {
+    // Fast lookup in loaded posts (prefer explore in-memory first)
+    const post =
+      explore.find(p => p.$id === postId) ||
+      cachedExplore.find(p => p.$id === postId);
+
+    if (post) return post;
+
+    try {
+      return await fetchPostById(postId);
+    } catch {
+      return null;
+    }
+  };
 
   // Load cached explore feed on mount, don't block UI for data fetch
   useEffect(() => {
@@ -56,5 +72,6 @@ export const usePosts = () => {
     loadReels,
     exploreLoading,
     reelsLoading,
+    getPostById
   };
 };

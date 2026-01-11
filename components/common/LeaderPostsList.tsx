@@ -14,6 +14,7 @@ export default function PostsList({ posts }: PostsListProps) {
   return (
     <FlatList
       data={posts}
+      className='mt-4'
       keyExtractor={(item) => item.$id}
       renderItem={({ item }) => (
         <View className="px-4 mb-4">

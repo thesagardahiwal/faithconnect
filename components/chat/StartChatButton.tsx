@@ -104,7 +104,7 @@ export default function StartChatButton({
       onPress={handlePress}
       disabled={loading}
       className={`flex-row rounded-full items-center ${
-        compact ? 'px-4' : 'mt-4 px-6 py-3 rounded-full border border-border'
+        compact ? 'px-4' : 'mt-4 px-6 py-3 rounded-full border border-primary'
       }`}
     >
       {loading ? (

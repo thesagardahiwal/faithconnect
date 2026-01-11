@@ -18,7 +18,7 @@ export default function LeaderReelsGrid({ reels }: LeaderReelsGridProps) {
 
   return (
     <FlatList
-      className='mt-6'
+      className='mt-4'
       data={reels}
       numColumns={2}
       keyExtractor={(item) => item.$id}

@@ -49,3 +49,18 @@ export const fetchReelsByLeader = (leaderId: string) =>
     ]),
     Query.orderDesc('$createdAt'),
   ]);
+
+
+  export const fetchPostById = (postId: string) => {
+  return databases.getDocument(
+    APPWRITE_CONFIG.databaseId,
+    APPWRITE_CONFIG.collections.posts,
+    postId,
+    [
+      Query.select([
+        "*",
+        "leader.*"
+      ])
+    ]
+  );
+  }

@@ -7,7 +7,7 @@ import { useUser } from '@/hooks/useUser';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -132,6 +132,13 @@ export default function LoginScreen() {
         <View className="flex flex-row items-center justify-center mt-6">
           <Text className="text-xs text-text-secondary dark:text-dark-text-secondary text-center">
             By signing in, you agree to our&nbsp;
+            <Text
+              className="underline text-accent dark:text-dark-accent"
+              onPress={() => Alert.alert('Coming soon', 'Terms & Conditions will be available soon!')}
+            >
+              Terms & Conditions
+            </Text>
+            .
           </Text>
         </View>
       </View>

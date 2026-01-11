@@ -6,6 +6,7 @@ import { AppButton } from '@/components/ui/AppButton';
 import { AppInput } from '@/components/ui/AppInput';
 import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { useMedia } from '@/hooks/useMedia';
+import { useTheme } from '@/hooks/useTheme';
 import { useUser } from '@/hooks/useUser';
 import { databases } from '@/lib/appwrite';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ export default function CreateReel() {
   const router = useRouter();
   const { profile } = useUser();
   const { pickVideo, upload } = useMedia();
+  const { isDark } = useTheme();
 
   const [text, setText] = useState('');
   const [videoAsset, setVideoAsset] = useState<any>(null);
@@ -26,6 +28,24 @@ export default function CreateReel() {
   // Enhanced validation states and UX like the post creator
   const [textError, setTextError] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
+
+  // Colors from tailwind config for runtime use (copied & adapted from post.tsx)
+  const tailwindColors = {
+    background: isDark ? "#0F172A" : "#F9FAFB",
+    card: isDark ? "#111827" : "#FFFFFF",
+    cardAccent: isDark ? "#1E293B" : "#22244d",
+    text: isDark ? "#F9FAFB" : "#111827",
+    textSecondary: isDark ? "#9CA3AF" : "#6B7280",
+    accent: isDark ? "#E3C770" : "#C9A24D",
+    outline: isDark ? "#1F2937" : "#E5E7EB",
+    link: isDark ? "#5B8CFF" : "#2F6FED",
+    info: isDark ? "#B0DAFF" : "#81e1ff",
+    attention: isDark ? "#f59e42" : "#f59e42",
+    warn: isDark ? "#F87171" : "#DC2626",
+    gradientFrom: "#4a35df",
+    gradientTo: "#784ebc",
+    blueGray: isDark ? "#1e293b" : "#dbeafe"
+  };
 
   // Validation logic for the reel (video required; caption max 300 chars)
   const validateInput = () => {
@@ -60,6 +80,7 @@ export default function CreateReel() {
   const handleTextChange = (msg: string) => {
     setText(msg);
     if (textError && msg.length <= 300) setTextError(null);
+    if (videoError && videoAsset) setVideoError(null); // defensive: clear video error if video exists
   };
 
   const handlePublish = async () => {
@@ -97,7 +118,7 @@ export default function CreateReel() {
       setVideoAsset(null);
 
       // Success alert
-      Alert.alert('Success', 'Reel published successfully!', [
+      Alert.alert('Reel Published!', 'Your reel has been published.', [
         {
           text: "OK",
           onPress: () => router.back()
@@ -115,43 +136,45 @@ export default function CreateReel() {
     <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         keyboardVerticalOffset={90}
       >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <Header title="New Reel" />
 
-          {/* Enhanced guidance */}
+          {/* Enhanced guidance and card */}
           <View
+          className={`${isDark ? "bg-dark-surface" : "bg-primary-soft"}`}
             style={{
-              marginHorizontal: 20, 
-              marginTop: 24, 
-              marginBottom: 8, 
-              backgroundColor: '#20224c',
-              borderRadius: 17, 
+              marginHorizontal: 20,
+              marginTop: 24,
+              marginBottom: 8,
+              // backgroundColor: tailwindColors.cardAccent,
+              borderRadius: 17,
               padding: 22,
-              shadowColor: '#4066c9',
+              // shadowColor: tailwindColors.link,
               shadowOpacity: 0.14,
               shadowRadius: 5,
               elevation: 3,
             }}>
-            <View style={{flexDirection:'row', alignItems:'center', marginBottom: 10}}>
-              <MaterialCommunityIcons name="movie-open-outline" size={28} color="#67e8f9" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+              <MaterialCommunityIcons name="movie-open-outline" size={28} color={tailwindColors.info} />
               <Text style={{
                 fontWeight: '700',
                 fontSize: 20,
-                color: '#fff',
+                color: tailwindColors.text,
                 marginLeft: 10,
                 letterSpacing: 0.2
               }}>
                 Share a Reel Moment!
               </Text>
             </View>
-            <Text style={{
-              color:'#dbeafe',
+            <Text 
+            className='text-primary-soft dark:text-dark-primary'
+            style={{
               fontSize: 15,
               marginBottom: 18,
-              opacity:0.8,
+              opacity: 0.8,
             }}>
               Select a fun or powerful video to inspire, teach, or uplift your followers. Add a brief caption (optional).
             </Text>
@@ -161,8 +184,8 @@ export default function CreateReel() {
               <AppInput
                 label={
                   <Text>
-                    <Text style={{ color: "#fff", fontWeight: "600" }}>Caption </Text>
-                    <Text style={{ color: "#81e1ff", fontWeight: "400", fontSize: 13 }}>
+                    <Text style={{ color: tailwindColors.text, fontWeight: "600" }}>Caption </Text>
+                    <Text style={{ color: tailwindColors.info, fontWeight: "400", fontSize: 13 }}>
                       (optional, max 300 chars)
                     </Text>
                   </Text>
@@ -171,15 +194,23 @@ export default function CreateReel() {
                 onChangeText={handleTextChange}
                 placeholder="Add a caption to your reel..."
                 multiline={true}
+                inputStyle={{
+                  color: tailwindColors.text,
+                }}
+                // Pass thorugh any error state if needed
               />
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 {textError ? (
-                  <Text style={{ color: '#ff374e', fontSize: 13, fontWeight: '600' }}>
+                  <Text style={{
+                    color: tailwindColors.warn,
+                    fontSize: 13,
+                    fontWeight: '600'
+                  }}>
                     {textError}
                   </Text>
                 ) : (
                   <Text style={{
-                    color: text.length > 250 ? '#f59e42' : '#acacad',
+                    color: text.length > 250 ? tailwindColors.attention : tailwindColors.textSecondary,
                     fontSize: 12,
                     alignSelf: 'flex-end',
                     fontVariant: ['tabular-nums'],
@@ -189,25 +220,26 @@ export default function CreateReel() {
                     {text.length}/300
                   </Text>
                 )}
+                {/* Visual indicator bar for character count */}
                 <View style={{
                   flex: 1,
                   height: 6,
                   marginLeft: 12,
-                  backgroundColor: '#2d3157',
+                  backgroundColor: isDark ? tailwindColors.background : tailwindColors.cardAccent,
                   borderRadius: 5,
                   overflow: 'hidden',
                 }}>
                   <View style={{
-                    width: `${Math.min(100, (text.length/300)*100)}%`,
+                    width: `${Math.min(100, (text.length / 300) * 100)}%`,
                     height: '100%',
                     backgroundColor:
                       text.length < 250
-                        ? '#67e8f9'
+                        ? tailwindColors.info
                         : text.length <= 300
-                        ? '#f59e42'
-                        : '#ff4764',
+                          ? tailwindColors.attention
+                          : tailwindColors.warn,
                     borderRadius: 4,
-                  }}/>
+                  }} />
                 </View>
               </View>
             </View>
@@ -216,8 +248,15 @@ export default function CreateReel() {
             <MediaPicker
               label={
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-                  <MaterialCommunityIcons name="video-plus" size={26} color="#7ecddd" />
-                  <Text style={{ color:'#84cbf7', fontSize: 16, fontWeight: '600' }}>
+                  <MaterialCommunityIcons name="video-plus" size={26} color={isDark ? tailwindColors.info : "#7ecddd"} />
+                  <Text style={{
+                    color: videoError
+                      ? tailwindColors.warn
+                      : isDark
+                        ? tailwindColors.info
+                        : "#84cbf7",
+                    fontSize: 16, fontWeight: videoAsset ? 'bold' : '600'
+                  }}>
                     {videoAsset ? 'Change Video' : 'Add Video (required)'}
                   </Text>
                 </View>
@@ -227,15 +266,25 @@ export default function CreateReel() {
                 marginTop: 22,
                 marginBottom: 10,
                 borderWidth: videoError ? 2 : 1,
-                borderColor: videoError ? '#ff374e' : undefined,
-                backgroundColor: videoAsset ? '#181733' : undefined,
+                borderColor: videoError ? tailwindColors.warn : tailwindColors.outline,
+                backgroundColor: videoAsset
+                  ? isDark
+                    ? "#1e253c"
+                    : "#f3f4fd"
+                  : isDark
+                    ? tailwindColors.card
+                    : tailwindColors.cardAccent
               }}
               textStyle={{
-                color: videoError ? '#ff374e' : '#84cbf7',
-                fontWeight: videoAsset ? 'bold' : '600',
+                color: videoError
+                  ? tailwindColors.warn
+                  : isDark
+                    ? tailwindColors.info
+                    : "#84cbf7",
+                fontWeight: videoAsset ? "bold" : "600",
                 fontSize: 16,
               }}
-              iconRight={videoAsset ? <Ionicons name="checkmark-circle" size={20} color="#67e8f9" /> : undefined}
+              iconRight={videoAsset ? <Ionicons name="checkmark-circle" size={20} color={tailwindColors.info} /> : undefined}
             />
             {videoAsset && (
               <View style={{ marginTop: 7, marginBottom: 6 }}>
@@ -245,22 +294,30 @@ export default function CreateReel() {
                   style={{
                     alignItems: 'center',
                     flexDirection: 'row',
-                    justifyContent:'flex-end'
+                    justifyContent: 'flex-end'
                   }}
                 >
-                  <Ionicons name="close-circle" color="#fa6565" size={22} />
-                  <Text style={{ color:'#fa6565', marginLeft: 5, fontSize:13 }}>
+                  <Ionicons name="close-circle" color={tailwindColors.warn} size={22} />
+                  <Text style={{ color: tailwindColors.warn, marginLeft: 5, fontSize: 13 }}>
                     Remove Video
                   </Text>
                 </TouchableOpacity>
                 <View className="mt-2 flex-row items-center bg-surface dark:bg-dark-surface p-3 rounded-xl border border-border dark:border-dark-border">
-                  <Ionicons name="videocam" size={20} color="#2667c9" style={{ marginRight: 8 }} />
+                  <Ionicons name="videocam" size={20} color={tailwindColors.link} style={{ marginRight: 8 }} />
                   <View className="flex-1">
-                    <Text className="text-sm font-medium text-text-primary dark:text-dark-text-primary">
+                    <Text style={{
+                      color: tailwindColors.text,
+                      fontSize: 15,
+                      fontWeight: "bold"
+                    }}>
                       {videoAsset.fileName || videoAsset.name || 'Video selected'}
                     </Text>
                     {videoAsset.duration && (
-                      <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mt-1">
+                      <Text style={{
+                        color: tailwindColors.textSecondary,
+                        marginTop: 4,
+                        fontSize: 11.5
+                      }}>
                         Duration: {Math.round(videoAsset.duration)}s
                       </Text>
                     )}
@@ -269,7 +326,12 @@ export default function CreateReel() {
               </View>
             )}
             {videoError && (
-              <Text style={{color:'#ff374e', marginBottom:4, marginTop:0, fontSize: 13}}>{videoError}</Text>
+              <Text style={{
+                color: tailwindColors.warn,
+                marginBottom: 4,
+                marginTop: 0,
+                fontSize: 13
+              }}>{videoError}</Text>
             )}
 
             {/* Info message when no video */}
@@ -278,23 +340,23 @@ export default function CreateReel() {
                 marginTop: 10,
                 marginBottom: 2,
                 padding: 15,
-                backgroundColor: '#eff6ff',
+                backgroundColor: isDark ? tailwindColors.card : "#eff6ff",
                 borderRadius: 12,
-                borderColor: '#b8daf8',
+                borderColor: isDark ? tailwindColors.outline : "#b8daf8",
                 borderWidth: 1,
                 flexDirection: 'row',
                 alignItems: 'flex-start',
               }}>
-                <Ionicons name="information-circle" size={20} color="#2667c9" style={{ marginRight: 8, marginTop: 2 }} />
+                <Ionicons name="information-circle" size={20} color={tailwindColors.link} style={{ marginRight: 8, marginTop: 2 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={{
-                    color:'#1e293b',
-                    fontSize:15,
-                    fontWeight:'bold',
-                    marginBottom:3,
+                    color: tailwindColors.text,
+                    fontSize: 15,
+                    fontWeight: 'bold',
+                    marginBottom: 3,
                   }}>New Reel</Text>
                   <Text style={{
-                    color:'#2563eb',
+                    color: tailwindColors.link,
                     fontSize: 13,
                   }}>
                     Select a video from your gallery to create an engaging reel. You can add an optional caption to describe your content.
@@ -315,17 +377,20 @@ export default function CreateReel() {
                 onPress={handlePublish}
                 style={{
                   width: '90%',
-                  backgroundColor: 'linear-gradient(90deg,#35bee2,#4a62dd)',
-                  shadowColor: '#4066c9',
-                  shadowOpacity:0.18,
+                  backgroundColor: 'transparent',
+                  borderRadius: 30,
+                  shadowColor: tailwindColors.link,
+                  shadowOpacity: 0.18,
                   shadowRadius: 7,
                   elevation: 3,
-                  borderRadius: 30
+                  overflow: 'hidden'
                 }}
+                className="bg-gradient-to-r from-[#35bee2] to-[#4a62dd]"
                 textStyle={{
                   fontWeight: 'bold',
                   fontSize: 18,
                   letterSpacing: 1.3,
+                  color: "#fff"
                 }}
                 iconLeft={<Ionicons name="play-circle-outline" color="#fff" size={22} />}
                 disabled={loading}

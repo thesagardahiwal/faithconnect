@@ -44,7 +44,6 @@ function getFaithEmoji(faith: string) {
   return emojiMap[faith] || '🌈';
 }
 
-
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, updateUserProfile } = useUser();
@@ -55,7 +54,6 @@ export default function ProfileScreen() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Profile Editable State
   const [name, setName] = useState('');
   const [faith, setFaith] = useState('');
   const [bio, setBio] = useState('');
@@ -163,13 +161,10 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView className="flex-1 bg-background dark:bg-dark-background">
-        {/* Profile Banner / Header */}
-        <View className="bg-primary-soft dark:bg-dark-primary-soft pb-10 border-b border-border dark:border-dark-border">
-          {/* Banner/cover - could eventually be image or color */}
+      <ScrollView className="flex-1 bg-background dark:bg-dark-background" showsVerticalScrollIndicator={false}>
+        <View className="bg-primary-soft rounded-xl dark:bg-dark-primary-soft pb-10 border-b border-border dark:border-dark-border">
           <View className="w-full h-24 bg-gradient-to-r from-primary/80 to-accent/30 rounded-b-3xl absolute top-0 left-0 z-0" />
           <View className="z-10 px-5 pt-8 flex-row items-center justify-between">
-            {/* Avatar */}
             <View className="relative mt-5">
               <View className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-dark-primary-soft dark:to-dark-accent items-center justify-center overflow-hidden border-4 border-white dark:border-dark-surface shadow-lg">
                 {profileImgUrl && !imgFailed ? (
@@ -197,12 +192,9 @@ export default function ProfileScreen() {
                 </Pressable>
               )}
             </View>
-
-            {/* Edit/Save toggle and settings shortcut */}
             <View className="items-end mt-9">
               {!isEditing ? (
                 <View className="flex-row space-x-1">
-                  {/* Edit Button */}
                   <Pressable
                     onPress={() => setIsEditing(true)}
                     className="p-2 rounded-full bg-accent/10"
@@ -224,9 +216,7 @@ export default function ProfileScreen() {
                     }}
                     className="px-4 py-2 rounded-full border border-border dark:border-dark-border"
                   >
-                    <Text>
-                      <Text className="text-text-secondary dark:text-dark-text-secondary font-medium">Cancel</Text>
-                    </Text>
+                    <Text className="text-text-secondary dark:text-dark-text-secondary font-medium">Cancel</Text>
                   </Pressable>
                   <Pressable
                     onPress={handleSave}
@@ -237,21 +227,15 @@ export default function ProfileScreen() {
                     {loading ? (
                       <ActivityIndicator size="small" color="white" />
                     ) : (
-                      <Text>
-                        <Text className="text-white font-semibold">Save</Text>
-                      </Text>
+                      <Text className="text-white font-semibold">Save</Text>
                     )}
                   </Pressable>
                 </View>
               )}
             </View>
           </View>
-
         </View>
-
-        {/* Profile Form & Sections */}
         <View className="px-5 pt-8 pb-20">
-          {/* Name */}
           {isEditing && (
             <AppInput
               label="Name"
@@ -263,8 +247,6 @@ export default function ProfileScreen() {
               className="mb-6 text-text-primary dark:text-dark-text-primary"
             />
           )}
-
-          {/* Faith - with rich select box & explanations */}
           <View className="mb-6">
             <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Faith</Text>
             {isEditing ? (
@@ -280,35 +262,25 @@ export default function ProfileScreen() {
                         : 'border-border dark:border-dark-border bg-surface dark:bg-dark-surface'
                     ].join(' ')}
                   >
-                    <Text>
-                      <Text className="mr-2 text-xl">{getFaithEmoji(f.name)}</Text>
-                    </Text>
-                    <Text>
-                      <Text
-                        className={[
-                          'font-semibold mr-1',
-                          faith === f.name ? 'text-primary dark:text-dark-primary' : 'text-text-secondary dark:text-dark-text-secondary'
-                        ].join(' ')}
-                      >
-                        {f.name}
-                      </Text>
+                    <Text className="mr-2 text-xl">{getFaithEmoji(f.name)}</Text>
+                    <Text
+                      className={[
+                        'font-semibold mr-1',
+                        faith === f.name ? 'text-primary dark:text-dark-primary' : 'text-text-secondary dark:text-dark-text-secondary'
+                      ].join(' ')}
+                    >
+                      {f.name}
                     </Text>
                   </Pressable>
                 ))}
               </View>
             ) : (
               <View className="flex-row items-center bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
-                <Text>
-                  <Text className="text-2xl mr-3">{getFaithEmoji(faith)}</Text>
-                </Text>
-                <Text>
-                  <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{faith}</Text>
-                </Text>
+                <Text className="text-2xl mr-3">{getFaithEmoji(faith)}</Text>
+                <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{faith}</Text>
               </View>
             )}
           </View>
-
-          {/* Bio Section */}
           <View className="mb-6">
             <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Bio</Text>
             {isEditing ? (
@@ -325,38 +297,23 @@ export default function ProfileScreen() {
               />
             ) : (
               <View className="bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
-                <Text>
-                  <Text className="text-base text-text-primary dark:text-dark-text-primary leading-6">{bio || 'No bio yet. Tap edit to add a bio.'}</Text>
-                </Text>
+                <Text className="text-base text-text-primary dark:text-dark-text-primary leading-6">{bio || 'No bio yet. Tap edit to add a bio.'}</Text>
               </View>
             )}
           </View>
-
-          {/* Account Info Section */}
           <View className="mb-6">
             <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Account</Text>
             <View className="bg-surface dark:bg-dark-surface rounded-xl border border-border dark:border-dark-border overflow-hidden">
               <View className="px-4 py-3 border-b border-border dark:border-dark-border">
-                <Text>
-                  <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mb-1">Email</Text>
-                </Text>
-                <Text>
-                  <Text className="text-base text-text-primary dark:text-dark-text-primary font-medium">{user?.email || 'N/A'}</Text>
-                </Text>
+                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mb-1">Email</Text>
+                <Text className="text-base text-text-primary dark:text-dark-text-primary font-medium">{user?.email || 'N/A'}</Text>
               </View>
               <View className="px-4 py-3 flex-row items-center justify-between">
-                <Text>
-                  <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">Account ID</Text>
-                </Text>
-                <Text>
-                  <Text className="text-xs text-text-secondary">{user?.$id ? user.$id.slice(0, 8) + '...' : 'N/A'}</Text>
-                </Text>
+                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">Account ID</Text>
+                <Text className="text-xs text-text-secondary">{user?.$id ? user.$id.slice(0, 8) + '...' : 'N/A'}</Text>
               </View>
             </View>
           </View>
-
-
-          {/* Logout */}
           <View className="mb-10">
             <Pressable
               onPress={handleLogout}
@@ -371,15 +328,12 @@ export default function ProfileScreen() {
                   <Text>
                     <Ionicons name="log-out-outline" size={20} color="#DC2626" style={{ marginRight: 8 }} />
                   </Text>
-                  <Text>
-                    <Text className="text-red-600 dark:text-red-400 font-semibold text-base">Logout</Text>
-                  </Text>
+                  <Text className="text-red-600 dark:text-red-400 font-semibold text-base">Logout</Text>
                 </>
               )}
             </Pressable>
           </View>
-
-        </View> {/* End px-5 form wrapper */}
+        </View>
       </ScrollView>
     </Screen>
   );

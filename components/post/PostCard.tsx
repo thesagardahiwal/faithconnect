@@ -1,6 +1,7 @@
 import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { useFollows } from '@/hooks/useFollows';
 import { useLikes } from '@/hooks/useLikes';
+import { useTheme } from '@/hooks/useTheme';
 import { useUser } from '@/hooks/useUser';
 import { storage } from '@/lib/appwrite';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -36,11 +37,10 @@ function timeAgo(dateString: string) {
 function getPreviewUrl(mediaId: string): string | null {
   if (!mediaId) return null;
   try {
-    const fileViewUrl = storage.getFileViewURL(
+    return storage.getFileViewURL(
       APPWRITE_CONFIG.buckets.postMedia,
       mediaId
-    );
-    return fileViewUrl.toString();
+    ).toString();
   } catch (err) {
     console.error(`[getPreviewUrl] Failed to get preview url for mediaId: ${mediaId}`, err);
     return null;
@@ -92,6 +92,7 @@ const screen = Dimensions.get('window');
 export default function PostCard({ post }: any) {
   const router = useRouter();
   const { profile } = useUser();
+  const { isDark } = useTheme();
 
   const {
     _toggleFollow: toggleFollowApi,
@@ -159,10 +160,49 @@ export default function PostCard({ post }: any) {
     toggleFollowApi(profile.$id, leaderId);
   }, [profile?.$id, leaderId, toggleFollowApi, loadingFollow]);
 
+  // Tailwind themed classes
+  const cardBase =
+    "relative rounded-2xl mb-6 overflow-hidden border shadow-lg";
+  const cardLight = "bg-bg-primary border-border/60"; // bg background, border color
+  const cardDark = "bg-dark-bg-primary border-dark-border/70";
+  const cardShadow =
+    isDark
+      ? "shadow-black/30"
+      : "shadow-indigo-600/10";
+
+  const profileRing =
+    isDark
+      ? "bg-dark-bg-primary border border-dark-border/40"
+      : "bg-bg-primary border border-border/80";
+
+  const imageCard =
+    "rounded-xl border";
+  const imageBorder =
+    isDark
+      ? "border-dark-border/40 bg-dark-bg-secondary"
+      : "border-border/30 bg-bg-secondary";
+  const contentCard =
+    "rounded-xl my-2 border px-4 py-3";
+  const contentBorder =
+    isDark
+      ? "border-dark-border/30 bg-dark-bg-secondary"
+      : "border-border/20 bg-bg-secondary";
+
   return (
-    <View className="rounded-2xl mb-6 bg-surface dark:bg-dark-surface shadow border border-tint-3 overflow-hidden relative">
+    <View
+      className={[
+        cardBase,
+        isDark ? cardDark : cardLight,
+        cardShadow,
+      ].join(" ")}
+      style={{
+        borderWidth: 1.5,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 3 },
+      }}
+    >
       {/* Decorative Top Bar */}
-      <View className="h-2 bg-gradient-to-r from-brand/10 via-primary/10 to-accent/10" />
+      <View className="h-2 bg-transparent" />
 
       {/* Container */}
       <View className="px-4 pt-3 pb-2">
@@ -170,8 +210,14 @@ export default function PostCard({ post }: any) {
         <View className="flex-row items-start mb-4 gap-x-4">
           {/* Profile */}
           <Pressable
-            className="overflow-hidden rounded-full border-2 border-tint-2 shadow-sm"
-            style={{ width: 54, height: 54, backgroundColor: '#f3f4fa' }}
+            className={[
+              "overflow-hidden rounded-full shadow-sm items-center justify-center",
+              profileRing,
+            ].join(" ")}
+            style={{
+              width: 54,
+              height: 54,
+            }}
             onPress={() => {
               if (leaderId) {
                 router.push(`/${profile?.role === "worshiper" ? "(worshiper)" : "(leader)"}/leaders/${leaderId}`);
@@ -181,18 +227,21 @@ export default function PostCard({ post }: any) {
             {profileImgUrl && !profileImgFailed ? (
               <Image
                 source={profileImgUrl}
-                style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: '#f3f4fa' }}
+                style={{
+                  width: 54, height: 54, borderRadius: 27,
+                }}
+                className={isDark ? "bg-dark-bg-secondary" : "bg-bg-secondary"}
                 contentFit="cover"
                 onError={() => setProfileImgFailed(true)}
                 accessibilityLabel="Poster profile image"
               />
             ) : profileImgFailed ? (
               <View className="flex-1 items-center justify-center">
-                <Ionicons name="person-circle-outline" size={46} color="#B8BCD6" />
+                <Ionicons name="person-circle-outline" size={46} color={isDark ? "#3C4267" : "#c9d0e5"} />
               </View>
             ) : (
               <View className="flex-1 items-center justify-center">
-                <Ionicons name="person-outline" size={34} color="#B8BCD6" />
+                <Ionicons name="person-outline" size={34} color={isDark ? "#3C4267" : "#c9d0e5"} />
               </View>
             )}
           </Pressable>
@@ -207,7 +256,7 @@ export default function PostCard({ post }: any) {
                 }}
               >
                 <Text
-                  className="font-bold text-lg tracking-tight text-text-primary dark:text-dark-text-primary mr-2 max-w-[150px]"
+                  className="font-bold text-lg tracking-tight mr-2 max-w-[150px] text-text-primary dark:text-dark-text-primary"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
@@ -216,7 +265,7 @@ export default function PostCard({ post }: any) {
               </Pressable>
               {showFaith && leaderFaith &&
                 <View className="flex-row items-center mr-2 mb-0.5">
-                  <Text className="font-semibold text-base mr-1">
+                  <Text className="font-semibold text-base mr-1 text-text-primary dark:text-dark-text-primary">
                     {leaderFaith === "Christian" && "✝️"}
                     {leaderFaith === "Muslim" && "☪️"}
                     {leaderFaith === "Jewish" && "✡️"}
@@ -225,43 +274,53 @@ export default function PostCard({ post }: any) {
                     {leaderFaith === "Sikh" && "🪯"}
                     {leaderFaith === "Other" && "🌈"}
                   </Text>
-                  <Text className="text-sm font-semibold text-tint-4 text-text-primary dark:text-dark-text-primary">
+                  <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
                     {leaderFaith}
                   </Text>
                 </View>
               }
             </View>
             <View className="flex-row items-center gap-x-2 mt-1">
-              <Ionicons name="time-outline" size={13} color="#b7a1e6" />
-              <Text className="text-xs font-normal text-tint-5 text-text-primary dark:text-dark-text-primary">
+              <Ionicons name="time-outline" size={13} color={isDark ? "#baa8ef" : "#7b5cf5"} />
+              <Text className="text-xs font-normal text-text-secondary dark:text-dark-text-secondary">
                 {timeAgo(postedAt)}
               </Text>
             </View>
           </View>
+          {/* Follow Button */}
           {!isOwnPost && (
             <Pressable
               className={[
-                "pl-3 pr-3 py-2 rounded-full border flex-row items-center justify-center",
-                isFollowed ? "border-success bg-success/10" : "border-primary bg-primary/5"
+                "pl-3 pr-3 py-2 rounded-full flex-row items-center justify-center transition-colors",
+                isFollowed
+                  ? "bg-success/10 border border-success/40"
+                  : "bg-primary/5 border border-primary/20"
               ].join(" ")}
               disabled={isTogglingFollow}
               onPress={handleToggleFollow}
               style={({ pressed }) => [
-                pressed && { opacity: 0.75, backgroundColor: isFollowed ? "#def2e1" : "#ede9fc" },
-                { minWidth: 90 }
+                {
+                  minWidth: 90,
+                  opacity: pressed ? 0.92 : 1,
+                  shadowOpacity: 0,
+                },
               ]}
             >
               {isTogglingFollow ?
-                <ActivityIndicator size="small" color={isFollowed ? "#6cbf43" : "#2667c9"} className="mr-2" /> :
+                <ActivityIndicator size="small" color={isFollowed ? "#48c774" : "#7b5cf5"} className="mr-2" /> :
                 isFollowed ?
                   <>
-                    <Ionicons name="star" size={18} color="#6cbf43" className="mr-1" />
-                    <Text className="text-success font-semibold">Following</Text>
+                    <Ionicons name="star" size={18} color="#48c774" className="mr-1" />
+                    <Text className="text-success font-semibold text-success dark:text-success">
+                      Following
+                    </Text>
                   </>
                   :
                   <>
-                    <Ionicons name="person-add" size={18} color="#7c69dc" className="mr-1" />
-                    <Text className="text-primary font-semibold">Follow</Text>
+                    <Ionicons name="person-add" size={18} color="#7b5cf5" className="mr-1" />
+                    <Text className="text-primary font-semibold text-primary dark:text-primary">
+                      Follow
+                    </Text>
                   </>
               }
             </Pressable>
@@ -272,10 +331,14 @@ export default function PostCard({ post }: any) {
         {imgUrl && (
           <>
             <Pressable onPress={() => setModalVisible(true)} className="mb-3">
-              <View className="rounded-xl overflow-hidden border border-tint-3 bg-tint-3/10">
+              <View className={[imageCard, imageBorder].join(" ")} style={{ overflow: 'hidden' }}>
                 <Image
                   source={{ uri: imgUrl }}
-                  style={{ width: screen.width - 44, height: 210, backgroundColor: '#e5e1f8' }}
+                  style={{
+                    width: screen.width - 44,
+                    height: 210,
+                  }}
+                  className={isDark ? "bg-dark-bg-tertiary" : "bg-bg-tertiary"}
                   contentFit="cover"
                 />
               </View>
@@ -291,7 +354,12 @@ export default function PostCard({ post }: any) {
                 <View className="flex-1 justify-center items-center bg-black/90">
                   <Image
                     source={{ uri: imgUrl }}
-                    style={{ width: screen.width, height: screen.height * 0.7, borderRadius: 10, backgroundColor: "#18142e" }}
+                    style={{
+                      width: screen.width,
+                      height: screen.height * 0.7,
+                      borderRadius: 10,
+                    }}
+                    className="bg-dark-bg-primary"
                     contentFit="contain"
                   />
                   <TouchableOpacity
@@ -299,7 +367,7 @@ export default function PostCard({ post }: any) {
                     onPress={() => setModalVisible(false)}
                     accessibilityLabel="Close Image"
                   >
-                    <Ionicons name="close-circle" size={44} color="#e0e7fa" />
+                    <Ionicons name="close-circle" size={44} color={isDark ? "#c5a8ef" : "#e0e7fa"} />
                   </TouchableOpacity>
                 </View>
               </TouchableWithoutFeedback>
@@ -309,7 +377,7 @@ export default function PostCard({ post }: any) {
 
         {/* Post Content */}
         {post.text && (
-          <View className="bg-tint-3/15 px-4 py-3 rounded-xl my-2 border border-tint-3 min-h-[36px]">
+          <View className={[contentCard, contentBorder].join(" ")}>
             <Text className="font-semibold text-base leading-[22px] text-text-primary dark:text-dark-text-primary">
               {post.text}
             </Text>
@@ -321,24 +389,18 @@ export default function PostCard({ post }: any) {
           {/* Like Button */}
           <Pressable
             className={[
-              "flex-row px-2 p-1 items-center rounded-full border",
+              "flex-row px-2 p-1 items-center rounded-full transition-colors border",
               liked
-                ? "border-error bg-error/10"
-                : "border-primary bg-primary/5",
+                ? "bg-error/10 border-error/50"
+                : "bg-primary/5 border-primary/20"
             ].join(" ")}
-            style={({ pressed }) => [
-              pressed && {
-                opacity: 0.8,
-                backgroundColor: liked
-                  ? "#fbe4ee"
-                  : "#ede9fc",
-              },
-              {
-                paddingVertical: 11,
-                paddingHorizontal: 18,
-                minWidth: 92,
-              },
-            ]}
+            style={({ pressed }) => ({
+              paddingVertical: 11,
+              paddingHorizontal: 18,
+              minWidth: 92,
+              shadowOpacity: 0,
+              opacity: pressed ? 0.8 : 1,
+            })}
             onPress={toggleLike}
             disabled={likeLoading}
             accessibilityLabel={liked ? "Unlike" : "Like"}
@@ -346,7 +408,7 @@ export default function PostCard({ post }: any) {
             <Ionicons
               name={liked ? "heart" : "heart-outline"}
               size={22}
-              color={liked ? "#DC2626" : "#2F6FED"}
+              color={liked ? "#DC2626" : "#7b5cf5"}
               className="mr-2"
               style={{
                 marginRight: 8,
@@ -357,22 +419,19 @@ export default function PostCard({ post }: any) {
               className={[
                 "mr-2 text-base tracking-wide",
                 liked
-                  ? "text-error dark:text-dark-error font-bold"
-                  : "text-primary dark:text-dark-primary font-medium",
+                  ? "font-bold text-error dark:text-error"
+                  : "font-medium text-primary dark:text-primary",
               ].join(" ")}
             >
               {liked ? "Liked" : "Like"}
             </Text>
-            <Text
-              className="text-sm mr-1 text-text-secondary dark:text-dark-text-secondary"
-              style={{ minWidth: 28 }}
-            >
+            <Text className="text-sm mr-1 text-text-secondary dark:text-dark-text-secondary" style={{ minWidth: 10 }}>
               {likesCount || post.likesCount}
             </Text>
             {likeLoading && (
               <ActivityIndicator
                 size="small"
-                color={liked ? "#DC2626" : "#2F6FED"}
+                color={liked ? "#DC2626" : "#7b5cf5"}
                 style={{ marginLeft: 5 }}
               />
             )}
@@ -380,17 +439,25 @@ export default function PostCard({ post }: any) {
 
           {/* Comment Button (opens upcoming modal) */}
           <Pressable
-            className="flex-row p-2 px-3 items-center rounded-full border border-border dark:border-dark-border bg-surface/50 dark:bg-dark-surface/50"
-            style={({ pressed }) => [
-              pressed && { opacity: 0.8 },
-              { paddingVertical: 11, paddingHorizontal: 14, minWidth: 75 }
-            ]}
+            className={[
+              "flex-row p-2 px-3 items-center rounded-full border transition-colors",
+              isDark
+                ? "bg-dark-bg-tertiary border-dark-border/26"
+                : "bg-bg-secondary border-border/30"
+            ].join(" ")}
+            style={({ pressed }) => ({
+              paddingVertical: 11,
+              paddingHorizontal: 14,
+              minWidth: 75,
+              shadowOpacity: 0,
+              opacity: pressed ? 0.8 : 1,
+            })}
             onPress={() => setUpcomingModalVisible(true)}
           >
             <MaterialCommunityIcons
               name="message-reply-text-outline"
               size={20}
-              color="#2F6FED"
+              color={isDark ? "#baa8ef" : "#7b5cf5"}
               className="mr-2"
             />
             <Text className="text-sm font-semibold text-primary dark:text-dark-primary">
@@ -400,17 +467,25 @@ export default function PostCard({ post }: any) {
 
           {/* Share (also upcoming modal) */}
           <Pressable
-            className="flex-row p-2 px-3 justify-center items-center rounded-full border border-accent bg-accent/10"
-            style={({ pressed }) => [
-              pressed && { opacity: 0.88 },
-              { paddingVertical: 11, paddingHorizontal: 14, minWidth: 72 }
-            ]}
+            className={[
+              "flex-row p-2 px-3 justify-center items-center rounded-full border transition-colors",
+              isDark
+                ? "bg-dark-bg-tertiary border-dark-accent/30"
+                : "bg-accent/10 border-accent/25"
+            ].join(" ")}
+            style={({ pressed }) => ({
+              paddingVertical: 11,
+              paddingHorizontal: 14,
+              minWidth: 72,
+              shadowOpacity: 0,
+              opacity: pressed ? 0.88 : 1,
+            })}
             onPress={() => setUpcomingModalVisible(true)}
           >
             <Ionicons
               name="share-social-outline"
               size={19}
-              color="#C9A24D"
+              color={isDark ? "#ffd86f" : "#e3a638"}
               className="mr-2"
             />
             <Text className="text-sm font-semibold text-accent dark:text-dark-accent">
@@ -428,19 +503,22 @@ export default function PostCard({ post }: any) {
         onRequestClose={() => setUpcomingModalVisible(false)}
       >
         <View className="flex-1 bg-black/60 justify-center items-center px-6">
-          <View className="bg-surface dark:bg-dark-surface rounded-3xl py-10 px-6 w-full max-w-xs items-center shadow-lg">
-            <Ionicons name="sparkles-outline" size={42} color="#885cf5" className="mb-2" />
-            <Text className="text-lg font-bold text-primary mb-2 text-center">
+          <View className={[
+            "bg-bg-primary dark:bg-dark-bg-secondary rounded-3xl py-10 px-6 w-full max-w-xs items-center shadow-lg border",
+            isDark ? "border-dark-border/30" : "border-border/30"
+          ].join(" ")}>
+            <Ionicons name="sparkles-outline" size={42} color={isDark ? "#bb7fff" : "#7b5cf5"} className="mb-2" />
+            <Text className="text-lg font-bold text-primary dark:text-dark-primary mb-2 text-center">
               {upcomingModalContent[0].title}
             </Text>
-            <Text className="text-base font-medium text-primary/70 mb-5 text-center">
+            <Text className="text-base font-medium text-primary/70 dark:text-dark-primary/70 mb-5 text-center">
               {upcomingModalContent[0].subtitle}
             </Text>
             <ScrollView className="max-h-52 w-full self-center mb-3">
               {upcomingModalContent[0].points.map(pt => (
                 <View key={pt} className="flex-row items-center mb-2">
-                  <Ionicons name="checkmark-circle" size={20} color="#945ef5" className="mr-3" />
-                  <Text className="text-base font-semibold text-text-primary">{pt}</Text>
+                  <Ionicons name="checkmark-circle" size={20} color={isDark ? "#bb7fff" : "#7b5cf5"} className="mr-3" />
+                  <Text className="text-base font-semibold text-text-primary dark:text-dark-text-primary">{pt}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -449,7 +527,9 @@ export default function PostCard({ post }: any) {
               onPress={() => setUpcomingModalVisible(false)}
               activeOpacity={0.89}
             >
-              <Text className="text-base font-bold tracking-wider text-primary">Got it</Text>
+              <Text className="text-base font-bold tracking-wider text-primary dark:text-dark-primary">
+                Got it
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

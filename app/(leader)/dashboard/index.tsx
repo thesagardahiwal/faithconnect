@@ -225,7 +225,6 @@ export default function LeaderDashboard() {
             icon={<Feather name="users" size={22} color="#C9A24D" />}
             iconBg="#fff9ea"
             onPress={() => router.push('/(leader)/followers')}
-            highlight
           />
 
           {/* Reels */}

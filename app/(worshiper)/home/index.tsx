@@ -121,6 +121,7 @@ export default function WorshiperHome() {
         keyExtractor={(item) => item.$id}
         onRefresh={loadExplore}
         refreshing={false}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <PostCard post={item} />}
         contentContainerStyle={{ paddingBottom: 24 }}
         ListEmptyComponent={

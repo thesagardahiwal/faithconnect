@@ -146,6 +146,12 @@ export default function LeaderLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="post/[id]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

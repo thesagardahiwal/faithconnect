@@ -26,14 +26,18 @@ export default function WorshiperLayout() {
           backgroundColor: tabBarBgColor,
           borderTopWidth: 1,
           borderTopColor: tabBarBorderColor,
+          height: 60, // Keep height for space, but minimize padding above border
+          paddingTop: 0, // Remove space above tab bar (critical for this edit)
+          paddingBottom: 10, // Big enough bottom spacing for tab text
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginBottom: 4,
+          marginBottom: 8,
         },
         tabBarIconStyle: {
-          marginTop: 2,
+          marginTop: 0, // Remove any vertical margin above icons
+          marginBottom: 0,
         },
       }}
     >
@@ -101,6 +105,12 @@ export default function WorshiperLayout() {
         />
         <Tabs.Screen
             name='notifications/index'
+            options={{
+                href: null
+            }}
+        />
+        <Tabs.Screen
+            name='home/post/[id].tsx'
             options={{
                 href: null
             }}
