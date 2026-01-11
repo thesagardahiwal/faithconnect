@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-  const { user, loading } = useAppSelector((state) => state.auth);
+  const { user, loading, error } = useAppSelector((state) => state.auth);
 
   const restoreSession = useCallback(() => {
     dispatch(fetchSession());
@@ -49,5 +49,6 @@ export const useAuth = () => {
     _register,
     logout,
     restoreSession,
+    error
   };
 };

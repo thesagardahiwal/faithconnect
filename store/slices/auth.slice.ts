@@ -94,11 +94,13 @@ export const register = createAsyncThunk(
 interface AuthState {
   user: Models.User<Models.Preferences> | null;
   loading: boolean;
+  error: string;
 }
 
 const initialState: AuthState = {
   user: null,
   loading: false,
+  error: ''
 };
 
 const authSlice = createSlice({
@@ -123,6 +125,7 @@ const authSlice = createSlice({
       .addCase(fetchSession.rejected, (state, action) => {
         state.user = null;
         state.loading = false;
+        state.error = action.error.message || '';
         toast({
           type: "error",
           text1: "Session Load Failed",
@@ -147,6 +150,7 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.user = null;
         state.loading = false;
+        state.error = action.error.message || '';
         toast({
           type: "error",
           text1: "Login Failed",
@@ -172,6 +176,7 @@ const authSlice = createSlice({
       .addCase(register.rejected, (state, action) => {
         state.user = null;
         state.loading = false;
+        state.error = action.error.message || '';
         toast({
           type: "error",
           text1: "Registration Failed",

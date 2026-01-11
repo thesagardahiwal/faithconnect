@@ -13,6 +13,7 @@ interface Props {
   iconRight?: React.ReactNode;
   activityColor?: string;
   children?: React.ReactNode;
+  className?: string; // Added
 }
 
 export function AppButton({
@@ -27,6 +28,7 @@ export function AppButton({
   iconRight,
   activityColor = '#fff',
   children,
+  className = "", // Added
 }: Props) {
   const base =
     'rounded-xl py-4 items-center justify-center flex-row';
@@ -36,11 +38,14 @@ export function AppButton({
       ? 'bg-primary dark:bg-dark-primary'
       : 'bg-primary-soft dark:bg-dark-primary-soft';
 
+  // Build the final className using all applicable sources
+  const mergedClassName = [base, styles, className].filter(Boolean).join(' ');
+
   return (
     <TouchableOpacity
       disabled={loading || disabled}
       onPress={onPress}
-      className={`${base} ${styles}`}
+      className={mergedClassName}
       style={style}
       activeOpacity={0.82}
     >
