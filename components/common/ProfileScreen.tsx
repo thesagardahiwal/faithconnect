@@ -12,7 +12,15 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
-const FAITHS = ['Christian', 'Muslim', 'Jewish', 'Buddhist', 'Hindu', 'Sikh', 'Other'];
+const FAITHS = [
+  { name: 'Christian', desc: 'Belief in Jesus Christ as savior' },
+  { name: 'Muslim', desc: 'Islamic faith and the Prophet Muhammed' },
+  { name: 'Jewish', desc: 'Jewish faith and heritage' },
+  { name: 'Buddhist', desc: 'Belief in Buddha and the Eightfold Path' },
+  { name: 'Hindu', desc: 'Hindu gods, rituals and cycle' },
+  { name: 'Sikh', desc: 'Sikh beliefs and traditions' },
+  { name: 'Other', desc: 'Other or exploring' },
+];
 
 function getProfileImageUrl(imgId: string | undefined): string | null {
   if (!imgId) return null;
@@ -36,6 +44,16 @@ function getFaithEmoji(faith: string) {
   return emojiMap[faith] || '🌈';
 }
 
+function formatJoinedDate(dateStr: string | undefined): string {
+  if (!dateStr) return '';
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
+  } catch {
+    return '';
+  }
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, updateUserProfile } = useUser();
@@ -45,14 +63,15 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  
+
+  // Profile Editable State
   const [name, setName] = useState('');
   const [faith, setFaith] = useState('');
   const [bio, setBio] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [profileImgUrl, setProfileImgUrl] = useState<string | null>(null);
   const [imgFailed, setImgFailed] = useState(false);
-  
+
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
@@ -77,17 +96,14 @@ export default function ProfileScreen() {
       Alert.alert('Error', 'Profile not found');
       return;
     }
-
     if (!name.trim()) {
       Alert.alert('Error', 'Name is required');
       return;
     }
-
     if (!faith.trim()) {
       Alert.alert('Error', 'Faith is required');
       return;
     }
-
     setLoading(true);
     try {
       await updateUserProfile(profile.$id, {
@@ -109,7 +125,6 @@ export default function ProfileScreen() {
     try {
       const asset = await pickImage();
       if (!asset) return;
-
       setUploadingPhoto(true);
       const fileId = await upload(asset, 'image');
       setPhotoUrl(fileId);
@@ -125,10 +140,7 @@ export default function ProfileScreen() {
       'Logout',
       'Are you sure you want to logout? All your data will be cleared.',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           style: 'destructive',
@@ -160,28 +172,59 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Profile Header with Gradient-like effect */}
-        <View className="bg-surface dark:bg-dark-surface pb-8 border-b border-border dark:border-dark-border">
-          <View className="px-4 pt-4">
-            {/* Header with Edit Button */}
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-3xl font-bold text-text-primary dark:text-dark-text-primary">
-                Profile
-              </Text>
-              {!isEditing ? (
-                <Pressable 
-                  onPress={() => setIsEditing(true)}
-                  className="p-2 rounded-full bg-accent/10"
+      <ScrollView className="flex-1 bg-background dark:bg-dark-background" showsVerticalScrollIndicator={false}>
+
+        {/* Profile Banner / Header */}
+        <View className="bg-primary-soft dark:bg-dark-primary-soft pb-10 border-b border-border dark:border-dark-border">
+          {/* Banner/cover - could eventually be image or color */}
+          <View className="w-full h-24 bg-gradient-to-r from-primary/80 to-accent/30 rounded-b-3xl absolute top-0 left-0 z-0" />
+          <View className="z-10 px-5 pt-8 flex-row items-center justify-between">
+            {/* Avatar */}
+            <View className="relative mt-5">
+              <View className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-dark-primary-soft dark:to-dark-accent items-center justify-center overflow-hidden border-4 border-white dark:border-dark-surface shadow-lg">
+                {profileImgUrl && !imgFailed ? (
+                  <Image
+                    source={{ uri: profileImgUrl }}
+                    style={{ width: 144, height: 144 }}
+                    contentFit="cover"
+                    onError={() => setImgFailed(true)}
+                  />
+                ) : (
+                  <Ionicons name="person" size={72} color="#9CA3AF" />
+                )}
+              </View>
+              {isEditing && (
+                <Pressable
+                  onPress={handlePickImage}
+                  disabled={uploadingPhoto}
+                  className="absolute bottom-3 right-3 bg-accent rounded-full p-3 border-4 border-white dark:border-dark-surface shadow-md z-20"
                 >
-                  <Ionicons name="create-outline" size={22} color="#2667c9" />
+                  {uploadingPhoto ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Ionicons name="camera" size={22} color="white" />
+                  )}
                 </Pressable>
+              )}
+            </View>
+
+            {/* Edit/Save toggle and settings shortcut */}
+            <View className="items-end mt-9">
+              {!isEditing ? (
+                <View className="flex-row space-x-1">
+                  {/* Edit Button */}
+                  <Pressable
+                    onPress={() => setIsEditing(true)}
+                    className="p-2 rounded-full bg-accent/10"
+                  >
+                    <Ionicons name="create-outline" size={22} color="#C9A24D" />
+                  </Pressable>
+                </View>
               ) : (
-                <View className="flex-row gap-3">
-                  <Pressable 
+                <View className="flex-row gap-2">
+                  <Pressable
                     onPress={() => {
                       setIsEditing(false);
-                      // Reset to original values
                       if (profile) {
                         setName(profile.name || '');
                         setFaith(profile.faith || '');
@@ -193,8 +236,8 @@ export default function ProfileScreen() {
                   >
                     <Text className="text-text-secondary dark:text-dark-text-secondary font-medium">Cancel</Text>
                   </Pressable>
-                  <Pressable 
-                    onPress={handleSave} 
+                  <Pressable
+                    onPress={handleSave}
                     disabled={loading}
                     className="px-4 py-2 rounded-full bg-accent"
                     style={{ opacity: loading ? 0.7 : 1 }}
@@ -208,47 +251,13 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
-
-            {/* Profile Image with better styling */}
-            <View className="items-center mb-6">
-              <View className="relative">
-                <View className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 items-center justify-center overflow-hidden border-4 border-white dark:border-gray-800 shadow-lg">
-                  {profileImgUrl && !imgFailed ? (
-                    <Image
-                      source={{ uri: profileImgUrl }}
-                      style={{ width: 144, height: 144 }}
-                      contentFit="cover"
-                      onError={() => setImgFailed(true)}
-                    />
-                  ) : (
-                    <Ionicons name="person" size={72} color="#9CA3AF" />
-                  )}
-                </View>
-                {isEditing && (
-                  <Pressable
-                    onPress={handlePickImage}
-                    disabled={uploadingPhoto}
-                    className="absolute bottom-0 right-0 bg-accent rounded-full p-3 border-4 border-white dark:border-gray-800 shadow-md"
-                  >
-                    {uploadingPhoto ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <Ionicons name="camera" size={22} color="white" />
-                    )}
-                  </Pressable>
-                )}
-              </View>
-              {!isEditing && (
-                <Text className="text-xl font-bold text-text-primary dark:text-dark-text-primary mt-4">
-                  {name || 'Your Name'}
-                </Text>
-              )}
-            </View>
           </View>
+
         </View>
 
-        {/* Profile Form */}
-        <View className="px-4 pt-6">
+        {/* Profile Form & Sections */}
+        <View className="px-5 pt-8 pb-20">
+          {/* Name */}
           {isEditing && (
             <AppInput
               label="Name"
@@ -256,34 +265,35 @@ export default function ProfileScreen() {
               onChangeText={setName}
               editable={isEditing}
               placeholder="Enter your name"
+              placeholderTextColor={"gray"}
+              className="mb-6 text-text-primary dark:text-dark-text-primary"
             />
           )}
 
-          {/* Faith Section */}
+          {/* Faith - with rich select box & explanations */}
           <View className="mb-6">
-            <Text className="mb-3 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
-              Faith
-            </Text>
+            <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Faith</Text>
             {isEditing ? (
               <View className="flex-row flex-wrap gap-2">
                 {FAITHS.map((f) => (
                   <Pressable
-                    key={f}
-                    onPress={() => setFaith(f)}
-                    className="px-4 py-3 rounded-xl border flex-row items-center"
-                    style={{
-                      borderColor: faith === f ? '#2667c9' : '#E5E7EB',
-                      backgroundColor: faith === f ? '#EFF6FF' : 'transparent',
-                    }}
+                    key={f.name}
+                    onPress={() => setFaith(f.name)}
+                    className={[
+                      'px-4 py-2 rounded-xl flex-row items-center border transition-all',
+                      faith === f.name
+                        ? 'border-primary bg-primary-soft dark:bg-dark-primary/70'
+                        : 'border-border dark:border-dark-border bg-surface dark:bg-dark-surface'
+                    ].join(' ')}
                   >
-                    <Text className="mr-2 text-lg">{getFaithEmoji(f)}</Text>
+                    <Text className="mr-2 text-xl">{getFaithEmoji(f.name)}</Text>
                     <Text
-                      className="font-semibold"
-                      style={{
-                        color: faith === f ? '#2667c9' : '#6B7280',
-                      }}
+                      className={[
+                        'font-semibold mr-1',
+                        faith === f.name ? 'text-primary dark:text-dark-primary' : 'text-text-secondary dark:text-dark-text-secondary'
+                      ].join(' ')}
                     >
-                      {f}
+                      {f.name}
                     </Text>
                   </Pressable>
                 ))}
@@ -291,18 +301,14 @@ export default function ProfileScreen() {
             ) : (
               <View className="flex-row items-center bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
                 <Text className="text-2xl mr-3">{getFaithEmoji(faith)}</Text>
-                <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">
-                  {faith}
-                </Text>
+                <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{faith}</Text>
               </View>
             )}
           </View>
 
           {/* Bio Section */}
           <View className="mb-6">
-            <Text className="mb-3 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
-              Bio
-            </Text>
+            <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Bio</Text>
             {isEditing ? (
               <TextInput
                 value={bio}
@@ -311,35 +317,35 @@ export default function ProfileScreen() {
                 placeholderTextColor="#9CA3AF"
                 multiline
                 numberOfLines={4}
-                className="rounded-xl border border-border dark:border-dark-border px-4 py-3 bg-surface dark:bg-dark-surface text-text-primary dark:text-dark-text-primary min-h-[120px]"
+                className="rounded-xl border border-border dark:border-dark-border px-4 py-3 bg-surface dark:bg-dark-surface text-text-primary dark:text-dark-text-primary min-h-[120px] text-base"
                 textAlignVertical="top"
+                maxLength={400}
               />
             ) : (
               <View className="bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
-                <Text className="text-base text-text-primary dark:text-dark-text-primary leading-6">
-                  {bio || 'No bio yet. Tap edit to add a bio.'}
-                </Text>
+                <Text className="text-base text-text-primary dark:text-dark-text-primary leading-6">{bio || 'No bio yet. Tap edit to add a bio.'}</Text>
               </View>
             )}
           </View>
 
-          {/* Account Section */}
+          {/* Account Info Section */}
           <View className="mb-6">
-            <Text className="mb-3 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
-              Account
-            </Text>
+            <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Account</Text>
             <View className="bg-surface dark:bg-dark-surface rounded-xl border border-border dark:border-dark-border overflow-hidden">
               <View className="px-4 py-3 border-b border-border dark:border-dark-border">
                 <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mb-1">Email</Text>
-                <Text className="text-base text-text-primary dark:text-dark-text-primary font-medium">
-                  {user?.email || 'N/A'}
-                </Text>
+                <Text className="text-base text-text-primary dark:text-dark-text-primary font-medium">{user?.email || 'N/A'}</Text>
+              </View>
+              <View className="px-4 py-3 flex-row items-center justify-between">
+                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">Account ID</Text>
+                <Text className="text-xs text-text-secondary">{user?.$id ? user.$id.slice(0, 8) + '...' : 'N/A'}</Text>
               </View>
             </View>
           </View>
 
-          {/* Logout Button */}
-          <View className="mb-8">
+
+          {/* Logout */}
+          <View className="mb-10">
             <Pressable
               onPress={handleLogout}
               disabled={loggingOut}
@@ -356,7 +362,8 @@ export default function ProfileScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+
+        </View> {/* End px-5 form wrapper */}
       </ScrollView>
     </Screen>
   );

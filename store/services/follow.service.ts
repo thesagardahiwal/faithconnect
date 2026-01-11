@@ -72,7 +72,11 @@ export const fetchMyWorshipers = async (
     DATABASE_ID,
     FOLLOWS_COLLECTION_ID,
     [
-      Query.equal('leader', leaderId)
+      Query.equal('leader', leaderId),
+      Query.select([
+        "*",
+        "worshiper.*"
+      ])
     ]
   );
 

@@ -1,10 +1,11 @@
+import { Follower } from '@/app/(leader)/followers';
 import { Follow } from '@/types/follow.types';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import * as followService from '../services/follow.service';
 
 interface FollowState {
   myLeaders: Follow[];
-  myWorshiper: Follow[];
+  myWorshiper: Follower[];
   loading: boolean;
   error: string | null;
   togglingLeaderId: string | null; // Track which leader is being toggled
@@ -110,7 +111,7 @@ const followSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchMyWorshipers.fulfilled, (state, action) => {
-        state.myWorshiper = action.payload as unknown as Follow[];
+        state.myWorshiper = action.payload as unknown as Follower[];
         state.loading = false;
       })
       .addCase(fetchMyWorshipers.rejected, (state, action) => {

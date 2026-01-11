@@ -1,18 +1,20 @@
 import EmptyState from '@/components/common/EmptyState';
-import Header from '@/components/common/Header';
 import Screen from '@/components/common/Screen';
 import { useFollows } from '@/hooks/useFollows';
 import { useUser } from '@/hooks/useUser';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useTheme } from '@react-navigation/native';
+import { Follow } from '@/types/follow.types';
+import { UserProfile } from '@/types/user.types';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
 
-function FollowerItem({ follower }: { follower: any }) {
+export type Follower = Omit<Follow, 'worshiper'> & { worshiper: UserProfile }
+
+function FollowerItem({ follower }: { follower: Follower }) {
   const [imageError, setImageError] = useState(false);
   const theme = useTheme();
-
-  const showPlaceholder = !follower?.profileImage || imageError;
+  const showPlaceholder = !follower?.worshiper || imageError;
 
   return (
     <View className="flex-row items-center p-4 border-b border-surface/40 dark:border-dark-surface/40">
@@ -27,7 +29,7 @@ function FollowerItem({ follower }: { follower: any }) {
         </View>
       ) : (
         <Image
-          source={{ uri: follower.profileImage }}
+          source={{ uri: follower.worshiper.photoUrl }}
           className="w-12 h-12 rounded-full bg-surface mr-4"
           resizeMode="cover"
           onError={() => setImageError(true)}
@@ -35,19 +37,59 @@ function FollowerItem({ follower }: { follower: any }) {
       )}
       <View className="flex-1">
         <Text className="text-lg font-medium text-text-primary dark:text-dark-text-primary">
-          {follower?.name || 'Unknown'}
+          {follower?.worshiper.name || 'Unknown'}
         </Text>
         <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
-          {follower?.faith || '—'}
+          {follower?.worshiper.faith || '—'}
         </Text>
       </View>
     </View>
   );
 }
 
+function FollowersHeader() {
+  const navigation = useNavigation();
+  const theme = useTheme();
+
+  return (
+    <View
+    className='bg-background dark:bg-dark-background'
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingTop: 12,
+        paddingBottom: 12,
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          padding: 6,
+          marginRight: 10,
+        }}
+        accessibilityLabel="Go back"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={28}
+          color={theme.colors.primary}
+        />
+      </TouchableOpacity>
+      <Text
+        className="text-xl font-bold text-text-primary dark:text-dark-text-primary"
+        style={{ flexShrink: 1 }}
+      >
+        Followers
+      </Text>
+    </View>
+  );
+}
+
 export default function FollowersScreen() {
   const { profile } = useUser();
-  const { myWorshiper, loadMyWorshiper, loading : myWorshiperLoading } = useFollows();
+  const { myWorshiper, loadMyWorshiper, loading: myWorshiperLoading } = useFollows();
   const [loadingMore, setLoadingMore] = useState(false);
 
   // Load followers on mount
@@ -60,32 +102,38 @@ export default function FollowersScreen() {
   }, [profile?.$id]);
 
   const handleLoadMore = useCallback(() => {
-    if (
-      !loadingMore &&
-      !myWorshiperLoading &&
-      profile?.$id
-    ) {
-      setLoadingMore(true);
-      Promise.resolve(
-        loadMyWorshiper(profile.$id)
-      ).finally(() => setLoadingMore(false));
-    }
-  }, [loadingMore, myWorshiperLoading, loadMyWorshiper, profile?.$id]);
+    // If we ever support pagination, implement it here.
+    // For now, don't show loading as if more items can be loaded.
+  }, []);
+
+  // Show a full screen loading indicator on initial load
+  if (myWorshiperLoading && (!myWorshiper || myWorshiper.length === 0)) {
+    return (
+      <Screen>
+        <FollowersHeader />
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
-      <Header title="Followers" />
-      {(!myWorshiper || myWorshiper.length === 0) && !myWorshiperLoading ? (
+      <FollowersHeader />
+      {(!myWorshiper || myWorshiper.length === 0) ? (
         <EmptyState text="You don't have any worshipers yet. Once someone follows you, they'll appear here." />
       ) : (
         <FlatList
           data={myWorshiper}
           keyExtractor={(item) => item?.$id}
           renderItem={({ item }) => <FollowerItem follower={item} />}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
+          // Remove listEnd/pagination UI if not loading more or paginating
+          onEndReached={undefined}
+          onEndReachedThreshold={undefined}
           ListFooterComponent={
-            (myWorshiperLoading || loadingMore)
+            // Only show spinner if loading more and we actually have data on the screen
+            loadingMore
               ? <View className="py-4"><ActivityIndicator /></View>
               : null
           }
