@@ -10,7 +10,6 @@ const CACHE_KEY_REELS = 'reels_feed_cache';
 export const usePosts = () => {
   const dispatch = useAppDispatch();
   const { explore, reels, exploreLoading, reelsLoading } = useAppSelector((state) => state.posts);
-
   const [cachedExplore, setCachedExplore] = useState<Post[]>([]);
   const [cachedReels, setCachedReels] = useState<Post[]>([]);
 

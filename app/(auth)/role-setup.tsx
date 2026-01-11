@@ -27,6 +27,14 @@ export default function RoleSetupScreen() {
     setStep('details');
   };
 
+  const handleBackToRoleSelect = () => {
+    setStep('choose-role');
+    setSelectedRole(undefined);
+    // Optional: clear name/faith when going back, or keep as is
+    // setName('');
+    // setFaith('');
+  };
+
   const handleCreateProfile = async () => {
     if (!user) {
       Alert.alert("User is not logged in!");
@@ -45,7 +53,8 @@ export default function RoleSetupScreen() {
         faith: faith.trim(),
       });
       router.replace('/');
-    } catch {
+    } catch (error) {
+      console.log(error);
       Alert.alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -124,12 +133,24 @@ export default function RoleSetupScreen() {
               onChangeText={setFaith}
               editable={!loading}
             />
-            <AppButton
-              title="Continue"
-              variant="primary"
-              loading={loading}
-              onPress={handleCreateProfile}
-            />
+            <View className="flex-row gap-3 space-x-4 mt-4">
+              <View style={{ flex: 1 }}>
+                <AppButton
+                  title="Back"
+                  variant="secondary"
+                  onPress={handleBackToRoleSelect}
+                  disabled={loading}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppButton
+                  title="Continue"
+                  variant="primary"
+                  loading={loading}
+                  onPress={handleCreateProfile}
+                />
+              </View>
+            </View>
           </>
         )}
       </View>

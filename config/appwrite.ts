@@ -7,8 +7,8 @@ export const APPWRITE_CONFIG = {
     databaseId: DATABASE_ID,
   
     collections: {
-      users: 'users_profile',
-      posts: 'posts',
+      users: 'user_profile',
+      posts: 'post',
       follows: 'follows',
       likes: 'likes',
       chats: 'chats',

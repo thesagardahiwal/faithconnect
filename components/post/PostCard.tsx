@@ -106,6 +106,9 @@ export default function PostCard({ post }: any) {
     let url: string | null = null;
     if (leaderImgId) {
       url = getProfileImageUrl(leaderImgId);
+      if (__DEV__) {
+        console.debug('[PostCard] profileImgUrl:', url);
+      }
       setProfileImgUrl(url ?? null);
     } else {
       setProfileImgUrl(null);
@@ -119,6 +122,10 @@ export default function PostCard({ post }: any) {
     let url: string | null = null;
     if (post.mediaUrl && isImageMediaUrl(post.mediaUrl)) {
       url = getPreviewUrl(post.mediaUrl);
+      // If running in development, log the generated preview image URL for debugging purposes
+      if (__DEV__) {
+        console.debug('[PostCard] post img preview url:', url);
+      }
       setImgUrl(url);
     } else {
       setImgUrl(null);

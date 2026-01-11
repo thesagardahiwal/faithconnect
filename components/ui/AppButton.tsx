@@ -5,12 +5,14 @@ interface Props {
   onPress: () => void;
   loading?: boolean;
   variant?: 'primary' | 'secondary';
+  disabled?: boolean;
 }
 
 export function AppButton({
   title,
   onPress,
   loading,
+  disabled,
   variant = 'primary',
 }: Props) {
   const base =
@@ -23,7 +25,7 @@ export function AppButton({
 
   return (
     <TouchableOpacity
-      disabled={loading}
+      disabled={loading || disabled}
       onPress={onPress}
       className={`${base} ${styles}`}
     >

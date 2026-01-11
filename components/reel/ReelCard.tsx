@@ -2,6 +2,7 @@ import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { useLikes } from '@/hooks/useLikes';
 import { storage } from '@/lib/appwrite';
 import { getMediaUrl } from '@/store/services/media.service';
+import { cacheReel } from '@/utils/reelCache';
 import { Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useEvent } from 'expo';
@@ -10,12 +11,12 @@ import { useFocusEffect } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Dimensions, Pressable, Text, View } from 'react-native';
-
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ReelCardProps {
   reel: any;
   isActive: boolean;
+  onPress?: () => void;
 }
 
 /* ---------------- helpers ---------------- */
@@ -44,11 +45,11 @@ function timeAgo(dateString?: string) {
 
 /* ---------------- component ---------------- */
 
-export default function ReelCard({ reel, isActive }: ReelCardProps) {
+export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
   /* 🔒 hooks MUST be unconditional */
-  const videoUri =
-    reel?.mediaUrl ? String(getMediaUrl(reel.mediaUrl, 'video')) : '';
-
+  const [videoUri, setVideoUri] = useState<string>('');
+  // const videoUri =
+  //   reel?.mediaUrl ? String(getMediaUrl(reel.mediaUrl, 'video')) : '';
   const player = useVideoPlayer(videoUri || 'about:blank', (p) => {
     p.loop = true;
     p.muted = false;
@@ -66,11 +67,30 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
 
   const [profileImgUrl, setProfileImgUrl] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-
+  
   const leader = typeof reel?.leader === 'object' ? reel.leader : null;
 
   /* ---------------- effects ---------------- */
-
+  useEffect(() => {
+    let cancelled = false;
+  
+    async function loadReel() {
+      if (!reel?.mediaUrl) return;
+  
+      const remoteUrl = String(getMediaUrl(reel.mediaUrl, 'video'));
+      const file = await cacheReel(remoteUrl, reel.mediaUrl);
+  
+      if (!cancelled) {
+        setVideoUri(file.uri); // 👈 LOCAL FILE URI
+      }
+    }
+  
+    loadReel();
+  
+    return () => {
+      cancelled = true;
+    };
+  }, [reel?.mediaUrl]);
   // Play / pause based on visibility
   // Optimized effect handling and added error handling
   useEffect(() => {
@@ -151,7 +171,11 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
   /* ---------------- render ---------------- */
 
   return (
-    <View style={{ backgroundColor: '#000', height: SCREEN_HEIGHT - tabBarHeight + 5 }}>
+    <View style={{ 
+      backgroundColor: '#000', 
+      height: SCREEN_HEIGHT - tabBarHeight,
+      // paddingBottom: tabBarHeight,
+      }}>
       {/* Video */}
       <Pressable
         onPress={() => (isPlaying ? player.pause() : player.play())}
@@ -159,7 +183,7 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
       >
         <VideoView
           player={player}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', borderRadius: 10 }}
           contentFit="cover"
           nativeControls={false}
         />
@@ -176,13 +200,13 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
         style={{
           position: 'absolute',
           right: 12,
-          bottom: 60,
+          bottom: 3 * tabBarHeight,
           alignItems: 'center',
           gap: 24,
         }}
       >
         {/* Avatar */}
-        <View className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-gray-800">
+        <View className="w-12 h-12 items-center justify-center rounded-full border-2 border-white overflow-hidden bg-gray-800">
           {profileImgUrl ? (
             <Image
               source={{ uri: profileImgUrl }}
@@ -219,10 +243,21 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
       </View>
 
       {/* Bottom info */}
-      <View className="absolute bottom-10 px-4">
-        <Text className="text-white font-semibold">
-          {leader?.name ?? 'Unknown'}
-        </Text>
+      <View style={{
+        position: 'absolute',
+        bottom: tabBarHeight,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 20,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+      }}>
+        <Pressable onPress={() => onPress?.()}>
+          <Text className="text-white font-semibold">
+            {leader?.name ?? 'Unknown'}
+          </Text>
+        </Pressable>
         <Text className="text-white/80 text-xs">
           {timeAgo(reel?.$createdAt)}
         </Text>

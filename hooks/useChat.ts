@@ -1,9 +1,10 @@
 import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { client, databases } from '@/lib/appwrite';
+import { getItem } from '@/lib/manageStorage';
+import { PROFILE_KEY } from '@/store/slices/user.slice';
 import { useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { ID, Query } from 'react-native-appwrite';
-
 interface Message {
   $id: string;
   chat: string;
@@ -12,12 +13,28 @@ interface Message {
   $createdAt: string;
 }
 
+// Used to keep a global persistent user ID if `userId` prop is absent
+let globalActualUserId: string | null = null;
+
 export const useChat = (chatId: string, userId: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
 
   // ✅ FIX 1: initial value provided
   const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  // Check and set the global actualUserId if userId is missing
+  useEffect(() => {
+    const checkAndSetUserId = async () => {
+      if (!userId && !globalActualUserId) {
+        const profile = await getItem(PROFILE_KEY);
+        if (profile && profile.$id) {
+          globalActualUserId = profile.$id;
+        }
+      }
+    };
+    checkAndSetUserId();
+  }, [userId]);
 
   const loadMessages = async () => {
     const res = await databases.listDocuments(
@@ -34,9 +51,26 @@ export const useChat = (chatId: string, userId: string) => {
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-
-    if (!chatId || !userId) {
-      Alert.alert('ChatId/UserId not found!', 'Please refresh!');
+    // Determine sender ID
+    let actualUserId = userId;
+    if (!userId) {
+      // If globalActualUserId isn't loaded yet, load it now
+      if (!globalActualUserId) {
+        const profile = await getItem(PROFILE_KEY);
+        if (profile && profile.$id) {
+          globalActualUserId = profile.$id;
+        } else {
+          Alert.alert('User not found', 'Please log in again or refresh!');
+          return;
+        }
+      }
+      actualUserId = globalActualUserId!;
+    } else {
+      // If userId is present, ensure global is up-to-date for future uses
+      globalActualUserId = userId;
+    }
+    if (!chatId) {
+      Alert.alert('Chat not found', 'This conversation could not be found or loaded.');
       return;
     }
 
@@ -48,7 +82,7 @@ export const useChat = (chatId: string, userId: string) => {
       ID.unique(),
       {
         chat: chatId,
-        sender: userId,
+        sender: actualUserId,
         text,
       }
     );

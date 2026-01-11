@@ -3,7 +3,7 @@ import { UserProfile } from '@/types/user.types';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { getUserProfile, updateUserProfile } from '../services/user.service';
 
-const PROFILE_KEY = 'user_profile';
+export const PROFILE_KEY = 'user_profile';
 
 async function storeProfile(profile: UserProfile) {
   try {

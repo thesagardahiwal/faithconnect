@@ -18,13 +18,13 @@ export default function MessageInput({
   };
 
   return (
-    <View className="flex-row items-center px-4 py-2 border-t border-border dark:border-dark-border">
+    <View className="flex-row items-center px-4 py-4 border-t border-border dark:border-dark-border">
       <TextInput
         value={text}
         onChangeText={setText}
         placeholderTextColor={"gray"}
         placeholder="Type a message"
-        className="flex-1 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800"
+        className="flex-1 dark:text-primary-soft text-dark-primary-soft px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800"
       />
       <Pressable onPress={handleSend} disabled={disabled} className="ml-3">
         <Ionicons name="send" color={"white"} size={24} />

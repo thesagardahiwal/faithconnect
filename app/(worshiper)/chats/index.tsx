@@ -21,8 +21,6 @@ export default function ChatsList() {
   const { profile } = useUser();
   const router = useRouter();
 
-  const hasChats = chats && chats.length > 0;
-
   // Initial load
   useEffect(() => {
     if (profile) {
@@ -32,30 +30,44 @@ export default function ChatsList() {
 
   const loadMore = () => {
     if (!loading && profile) {
-      console.log("LOADING>>>")
       loadUserChats(profile?.$id);
     }
   };
 
+  // If data is still loading and we have not yet determined if chats exist, show a loader
+  const isInitializing = loading && (!chats || chats.length === 0);
+  const hasChats = chats && chats.length > 0;
+
   return (
     <Screen>
       <Header title="Chats" />
+      {/* While we're fetching, show a full loader */}
+      {isInitializing ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
         <FlatList
           onRefresh={loadMore}
-          refreshing={false}
+          refreshing={loading}
           data={chats}
           keyExtractor={(item) => item.$id}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingBottom: 24, flexGrow: hasChats ? undefined : 1 }}
           renderItem={({ item }) => {
             const partner = getChatPartner(item, profile!.$id);
             const avatarUrl = partner.photoUrl
               ? partner.photoUrl
               : null;
-          
+
             return (
               <Pressable
                 className="flex-row items-center px-4 py-3 border-b border-border dark:border-dark-border"
-                onPress={() => router.push({pathname: profile?.role === "leader" ? "/(leader)/chats/[chatId]" : "/(worshiper)/chats/[chatId]", params: {chatId: item.$id, profileId: profile?.$id}})}
+                onPress={() =>
+                  router.push({
+                    pathname: profile?.role === "leader" ? "/(leader)/chats/[chatId]" : "/(worshiper)/chats/[chatId]",
+                    params: { chatId: item.$id, profileId: profile?.$id },
+                  })
+                }
               >
                 {/* Avatar */}
                 <View className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden items-center justify-center">
@@ -69,7 +81,7 @@ export default function ChatsList() {
                     <Ionicons name="person" size={22} color="#9CA3AF" />
                   )}
                 </View>
-          
+
                 {/* Middle content */}
                 <View className="flex-1 ml-3">
                   <Text
@@ -78,7 +90,6 @@ export default function ChatsList() {
                   >
                     {partner.name}
                   </Text>
-          
                   <Text
                     className="text-text-secondary dark:text-dark-text-secondary text-sm mt-0.5"
                     numberOfLines={1}
@@ -86,7 +97,7 @@ export default function ChatsList() {
                     {item.lastMessage || 'Say hello 👋'}
                   </Text>
                 </View>
-          
+
                 {/* Time */}
                 {item.lastMessageAt && (
                   <Text className="text-xs text-text-secondary dark:text-dark-text-secondary ml-2">
@@ -104,17 +115,26 @@ export default function ChatsList() {
               </View>
             ) : null
           }
-          ListEmptyComponent={() => (
-            <View className='flex-1 items-center justify-center'>
-              <EmptyState
-              title="No conversations yet"
-              text="Start following leaders to begin chatting."
-              actionLabel="Discover Leaders"
-              onAction={() => router.push(profile?.role === "leader" ? '/(leader)/leaders' : "/(worshiper)/leaders")}
-          />
-            </View>
-          )}
+          ListEmptyComponent={() =>
+            !loading && !hasChats ? (
+              <View className="flex-1 items-center justify-center">
+                <EmptyState
+                  title="No conversations yet"
+                  text="Start following leaders to begin chatting."
+                  actionLabel="Discover Leaders"
+                  onAction={() =>
+                    router.push(
+                      profile?.role === "leader"
+                        ? '/(leader)/leaders'
+                        : "/(worshiper)/leaders"
+                    )
+                  }
+                />
+              </View>
+            ) : null
+          }
         />
+      )}
     </Screen>
   );
 }

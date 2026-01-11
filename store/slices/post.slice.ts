@@ -1,7 +1,7 @@
+import { toast } from "@/lib/toastShow";
 import { Post } from '@/types/post.types';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import * as postService from '../services/post.service';
-
 export const loadExploreFeed = createAsyncThunk<
   { documents: Post[] }, // Return type of thunk
   void,                  // Input argument to thunk
@@ -84,6 +84,7 @@ const postSlice = createSlice({
       .addCase(loadExploreFeed.rejected, (state, action) => {
         state.exploreLoading = false;
         state.exploreError = action.payload || action.error.message || 'Failed to load explore feed.';
+        toast({ type: 'error', text1: state.exploreError! });
       })
       // Reels feed
       .addCase(loadReelsFeed.pending, (state) => {
@@ -98,6 +99,7 @@ const postSlice = createSlice({
       .addCase(loadReelsFeed.rejected, (state, action) => {
         state.reelsLoading = false;
         state.reelsError = action.payload || action.error.message || 'Failed to load reels.';
+        toast({ type: 'error', text1: state.reelsError! });
       });
   },
 });

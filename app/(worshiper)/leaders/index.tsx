@@ -80,7 +80,7 @@ function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPre
 
         {/* Leader Info */}
         <View className="flex-1">
-          <View className="flex-row items-center mb-1">
+          <View className="flex mb-1">
             <Text className="text-lg font-bold text-text-primary dark:text-dark-text-primary mr-2">
               {leader.name}
             </Text>
