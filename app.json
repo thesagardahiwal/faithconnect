@@ -30,8 +30,8 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png",
       "bundler": "metro",
-      "themeColor": "#2F6FED",      // Tailwind primary color
-      "backgroundColor": "#F9FAFB"  // Tailwind light background
+      "themeColor": "#2F6FED", // Tailwind primary color
+      "backgroundColor": "#F9FAFB" // Tailwind light background
     },
     "plugins": [
       "expo-router",
@@ -41,7 +41,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F9FAFB",  // Tailwind background
+          "backgroundColor": "#F9FAFB", // Tailwind background
           "dark": {
             "backgroundColor": "#0F172A" // Tailwind dark background
           }
@@ -79,11 +79,12 @@
       }
     },
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "sdkVersion"
     },
     "updates": {
       "enabled": true,
-      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 3000,
       "url": "https://u.expo.dev/a0f7d5e2-8eb9-496d-8036-2191cb086479"
     }
   }

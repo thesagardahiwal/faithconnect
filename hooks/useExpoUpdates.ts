@@ -1,60 +1,45 @@
 import * as Updates from 'expo-updates';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Alert } from 'react-native';
 
 export function useExpoUpdates() {
-  const checkedRef = useRef(false);
-
   useEffect(() => {
     if (__DEV__) return;
-    if (checkedRef.current) return;
 
-    checkedRef.current = true;
-
-    (async () => {
+    const check = async () => {
       try {
         const update = await Updates.checkForUpdateAsync();
 
-        if (!update.isAvailable) return;
-
-        Alert.alert(
-          'Update Available',
-          'A new version of the app is available. Would you like to download it now?',
-          [
-            {
-              text: 'Later',
-              style: 'cancel',
-            },
-            {
-              text: 'Download',
-              onPress: async () => {
-                try {
+        if (update.isAvailable) {
+          Alert.alert(
+            'Update Available',
+            'A new update is available. Download now?',
+            [
+              { text: 'Later', style: 'cancel' },
+              {
+                text: 'Download',
+                onPress: async () => {
                   await Updates.fetchUpdateAsync();
                   Alert.alert(
                     'Update Ready',
-                    'The update has been downloaded. Restart app now?',
+                    'Restart app to apply update.',
                     [
-                      { text: 'Later', style: 'cancel' },
                       {
                         text: 'Restart',
                         onPress: () => Updates.reloadAsync(),
                       },
                     ]
                   );
-                } catch {
-                  Alert.alert(
-                    'Update Failed',
-                    'Could not download the update. Please try again later.'
-                  );
-                }
+                },
               },
-            },
-          ],
-          { cancelable: false }
-        );
+            ]
+          );
+        }
       } catch (e) {
-        console.log('[ExpoUpdates] Check failed:', e);
+        console.log('OTA check failed', e);
       }
-    })();
+    };
+
+    check();
   }, []);
 }
