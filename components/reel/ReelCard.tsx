@@ -6,12 +6,13 @@ import { getMediaUrl } from '@/store/services/media.service';
 import { cacheReel } from '@/utils/reelCache';
 import { Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useIsFocused } from '@react-navigation/native';
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useCallback, useEffect, useState } from 'react';
-import { AppState, Dimensions, Pressable, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, AppState, Dimensions, Pressable, Text, View } from 'react-native';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ReelCardProps {
@@ -74,17 +75,31 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
   const leader = typeof reel?.leader === 'object' ? reel.leader : null;
 
   /* ---------------- effects ---------------- */
+  /* ---------------- guards ---------------- */
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadReel() {
-      if (!reel?.mediaUrl) return;
+      // If no mediaUrl, stop loading immediately
+      if (!reel?.mediaUrl) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
 
-      const remoteUrl = String(getMediaUrl(reel.mediaUrl, 'video'));
-      const file = await cacheReel(remoteUrl, reel.mediaUrl);
+      setLoading(true);
+      try {
+        const remoteUrl = String(getMediaUrl(reel.mediaUrl, 'video'));
+        const file = await cacheReel(remoteUrl, reel.mediaUrl);
 
-      if (!cancelled) {
-        setVideoUri(file.uri); // 👈 LOCAL FILE URI
+        if (!cancelled) {
+          setVideoUri(file.uri);
+        }
+      } catch (error) {
+        console.error("Failed to load reel:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -94,42 +109,36 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
       cancelled = true;
     };
   }, [reel?.mediaUrl]);
+
+  const isFocused = useIsFocused();
+
   // Play / pause based on visibility
-  // Optimized effect handling and added error handling
   useEffect(() => {
     if (!videoUri) return;
-    try {
-      if (isActive) {
+
+    const shouldPlay = isActive && isFocused;
+
+    if (shouldPlay) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isActive, isFocused, videoUri, player]);
+
+  // Handle app foreground/background (redundant with isFocused? usually yes, but good to keep)
+  useEffect(() => {
+    const handleAppStateChange = (state: string) => {
+      if (state === 'active' && isActive && isFocused) {
         player.play();
       } else {
         player.pause();
       }
-    } catch (error) {
-      console.error("Video play/pause error:", error);
-    }
-    // Only depend on isActive or videoUri, not player object (player is stable from the hook)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, videoUri]);
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [player, isActive, isFocused]);
 
-  // Pause on navigation blur/focus with error handling
-  useFocusEffect(
-    useCallback(() => {
-      try {
-        if (isActive) player.play();
-      } catch (error) {
-        console.error("Video play error on focus:", error);
-      }
-      return () => {
-        try {
-          player.pause();
-        } catch (error) {
-          console.error("Video pause error on blur:", error);
-        }
-      };
-    }, [isActive, player])
-  );
-
-  // Handle app foreground/background to control video playback
+  // Handle app foreground/background
   useEffect(() => {
     const handleAppStateChange = (state: string) => {
       if (state === 'active' && isActive) {
@@ -142,16 +151,28 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
     return () => subscription.remove();
   }, [player, isActive]);
 
-  // Efficiently set and clean up leader profile image
+  // Leader profile image
   useEffect(() => {
     if (leader?.photoUrl) {
       setProfileImgUrl(getProfileImageUrl(leader.photoUrl));
     } else {
       setProfileImgUrl(null);
     }
-  }, [leader?.photoUrl]);
-
-  /* ---------------- guards ---------------- */
+  }, [leader?.photoUrl]); if (loading) {
+    return (
+      <View
+        style={{
+          height: SCREEN_HEIGHT,
+          backgroundColor: '#000',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        className="bg-black"
+      >
+        <ActivityIndicator size="large" color="#ffffff" />
+      </View>
+    );
+  }
 
   if (!videoUri) {
     return (

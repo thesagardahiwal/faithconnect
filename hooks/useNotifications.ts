@@ -1,6 +1,7 @@
 import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { client } from '@/lib/appwrite';
 import { notificationService } from '@/store/services/notification.service';
+import { Notification } from '@/types/notification.types';
 import { useEffect, useState } from 'react';
 
 export function useNotifications(userId: string) {
@@ -23,9 +24,9 @@ export function useNotifications(userId: string) {
     const unsubscribe = client.subscribe(
       `databases.${APPWRITE_CONFIG.databaseId}.collections.${APPWRITE_CONFIG.collections.notifications}.documents`,
       (res) => {
-        console.log(res.payload);
-        if (res.payload?.to?.$id === userId) {
-          setNotifications(prev => [res.payload, ...prev]);
+        const payload = res.payload as unknown as Notification;
+        if (payload?.to?.$id === userId) {
+          setNotifications(prev => [payload, ...prev]);
         }
       }
     );
