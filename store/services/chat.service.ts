@@ -14,7 +14,8 @@ export const fetchChats = (userId: string) =>
     Query.select([
       "*",
       'leader.*',
-      'worshiper.*'
+      'worshiper.*',
+      'lastMessage.*'
     ])
   ]);
 /**

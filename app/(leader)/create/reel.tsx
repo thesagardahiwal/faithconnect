@@ -110,7 +110,6 @@ export default function CreateReel() {
           text: text || '',
           mediaUrl: mediaFileId,
           likesCount: 0,
-          commentsCount: 0,
         }
       );
 

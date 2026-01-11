@@ -1,37 +1,39 @@
 import EmptyState from '@/components/common/EmptyState';
 import Screen from '@/components/common/Screen';
+import { blurhash } from '@/constants/hashes';
 import { useFollows } from '@/hooks/useFollows';
+import { useTheme } from '@/hooks/useTheme';
 import { useUser } from '@/hooks/useUser';
 import { Follow } from '@/types/follow.types';
 import { UserProfile } from '@/types/user.types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
 
 export type Follower = Omit<Follow, 'worshiper'> & { worshiper: UserProfile }
 
 function FollowerItem({ follower }: { follower: Follower }) {
   const [imageError, setImageError] = useState(false);
-  const theme = useTheme();
-  const showPlaceholder = !follower?.worshiper || imageError;
+  const { isDark } = useTheme();
+  const showPlaceholder = !follower?.worshiper.photoUrl || imageError;
 
   return (
     <View className="flex-row items-center p-4 border-b border-surface/40 dark:border-dark-surface/40">
       {showPlaceholder ? (
-        <View className="w-12 h-12 rounded-full bg-surface mr-4 items-center justify-center">
+        <View className="w-12 h-12 rounded-full bg-surface dark:bg-dark-surface mr-4 items-center justify-center">
           <MaterialIcons
             name="account-circle"
-            size={48}
-            color={theme.colors.text + '55' /* light gray */}
-            style={{}}
+            size={40}
+            color={isDark ? "white" : "black"}
           />
         </View>
       ) : (
         <Image
-          source={{ uri: follower.worshiper.photoUrl }}
-          className="w-12 h-12 rounded-full bg-surface mr-4"
-          resizeMode="cover"
+          source={follower.worshiper.photoUrl || blurhash}
+          className="w-12 h-12 rounded-full bg-surface dark:bg-dark-surface mr-4"
+          contentFit="cover"
           onError={() => setImageError(true)}
         />
       )}
@@ -49,7 +51,7 @@ function FollowerItem({ follower }: { follower: Follower }) {
 
 function FollowersHeader() {
   const navigation = useNavigation();
-  const theme = useTheme();
+  const { isDark }= useTheme();
 
   return (
     <View
@@ -74,7 +76,7 @@ function FollowersHeader() {
         <Ionicons
           name="arrow-back"
           size={28}
-          color={theme.colors.primary}
+          color={`${isDark ? "white"  : "black"}`}
         />
       </TouchableOpacity>
       <Text

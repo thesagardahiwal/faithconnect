@@ -173,7 +173,7 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
   return (
     <View style={{ 
       backgroundColor: '#000', 
-      height: SCREEN_HEIGHT,
+      height: SCREEN_HEIGHT - 30,
       paddingBottom: tabBarHeight,
       }}>
       {/* Video */}

@@ -116,7 +116,7 @@ export default function ChatsList() {
                   className="text-text-secondary dark:text-dark-text-secondary text-sm mt-0.5"
                   numberOfLines={1}
                 >
-                  {item.lastMessage || 'Say hello 👋'}
+                  {item.lastMessage?.text || 'Say hello 👋'}
                 </Text>
               </View>
 

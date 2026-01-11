@@ -110,7 +110,7 @@ export default function WorshiperLayout() {
             }}
         />
         <Tabs.Screen
-            name='home/post/[id].tsx'
+            name='home/post/[id]'
             options={{
                 href: null
             }}

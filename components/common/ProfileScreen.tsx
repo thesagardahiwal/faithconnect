@@ -236,17 +236,28 @@ export default function ProfileScreen() {
           </View>
         </View>
         <View className="px-5 pt-8 pb-20">
-          {isEditing && (
-            <AppInput
-              label="Name"
-              value={name}
-              onChangeText={setName}
-              editable={isEditing}
-              placeholder="Enter your name"
-              placeholderTextColor={"gray"}
-              className="mb-6 text-text-primary dark:text-dark-text-primary"
-            />
-          )}
+          
+          <View className="mb-6">
+            <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
+              Name
+            </Text>
+            {isEditing ? (
+              <AppInput
+                label=""
+                value={name}
+                onChangeText={setName}
+                editable={isEditing}
+                placeholder="Enter your name"
+                placeholderTextColor={"gray"}
+                className="mb-0 text-text-primary dark:text-dark-text-primary"
+              />
+            ) : (
+              <View className="bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
+                <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{name || 'No name yet. Tap edit to add your name.'}</Text>
+              </View>
+            )}
+          </View>
+
           <View className="mb-6">
             <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Faith</Text>
             {isEditing ? (

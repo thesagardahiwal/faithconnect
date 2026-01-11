@@ -30,7 +30,7 @@ export default function ChatScreen() {
 
   return (
     <Screen>
-      <ChatHeader title="Chat" />
+      <ChatHeader title="Conversation"/>
 
       {/* If there is an upcoming message, highlight it visually above the chat */}
       {upcoming && (
@@ -54,6 +54,7 @@ export default function ChatScreen() {
           <MessageBubble
             text={item.text}
             isMine={item.sender === profile?.$id}
+            timestamp={item.$createdAt}
             // visually indicate if it's the upcoming message
             isUpcoming={upcoming ? item.$id === upcoming.$id : false}
             upcomingLabel={upcoming && item.$id === upcoming.$id ? 'Upcoming' : undefined}

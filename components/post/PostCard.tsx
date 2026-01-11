@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 
 // Simple time ago function
-function timeAgo(dateString: string) {
+export function timeAgo(dateString: string) {
   if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
@@ -440,7 +440,7 @@ export default function PostCard({ post }: any) {
           {/* Comment Button (opens upcoming modal) */}
           <Pressable
             className={[
-              "flex-row p-2 px-3 items-center rounded-full border transition-colors",
+              "flex-row p-2 px-3 items-center rounded-full border",
               isDark
                 ? "bg-dark-bg-tertiary border-dark-border/26"
                 : "bg-bg-secondary border-border/30"
@@ -502,7 +502,7 @@ export default function PostCard({ post }: any) {
         animationType="slide"
         onRequestClose={() => setUpcomingModalVisible(false)}
       >
-        <View className="flex-1 bg-black/60 justify-center items-center px-6">
+        <View className="flex-1 bg-black justify-center items-center px-6">
           <View className={[
             "bg-bg-primary dark:bg-dark-bg-secondary rounded-3xl py-10 px-6 w-full max-w-xs items-center shadow-lg border",
             isDark ? "border-dark-border/30" : "border-border/30"

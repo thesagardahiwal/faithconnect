@@ -239,7 +239,7 @@ export default function LeaderDashboard() {
           {/* Chats */}
           <StatCard
             label="Active Chats"
-            value={0} // Should be a number or string instead of JSX - update if you have a chats count
+            value={""} // Should be a number or string instead of JSX - update if you have a chats count
             icon={<Ionicons name="chatbubbles" size={22} color="#67e8f9" />}
             iconBg="#e0fcff"
             onPress={() => router.push('/(leader)/chats')}

@@ -1,5 +1,5 @@
 import { StyleProp, Text, TextStyle, View, ViewStyle } from 'react-native';
-
+import { timeAgo } from '../post/PostCard';
 interface Props {
   text: string;
   isMine: boolean;
@@ -53,7 +53,7 @@ export default function MessageBubble({
   // Compose container classes
   const baseContainer =
     "max-w-[75%] px-4 py-2 rounded-2xl mb-2 " +
-    (isMine ? "self-end" : "self-start") +
+    (isMine ? "self-end rounded-tr-none" : "self-start rounded-tl-none") +
     " " +
     bubbleBg +
     (isUpcoming ? " shadow-md" : "");
@@ -87,7 +87,7 @@ export default function MessageBubble({
       {(timestamp || (status && status !== 'sent')) && (
         <View className="flex-row items-center mt-1">
           {timestamp && (
-            <Text className={timeClass}>{timestamp}</Text>
+            <Text className={timeClass}>{timeAgo(timestamp)}</Text>
           )}
           {status && status !== 'sent' && (
             <Text className={`ml-2 text-xs font-medium ${statusColor}`}>
