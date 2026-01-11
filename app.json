@@ -21,6 +21,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.thesagardahiwal.faithconnect"
@@ -74,6 +75,12 @@
       "eas": {
         "projectId": "a0f7d5e2-8eb9-496d-8036-2191cb086479"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a0f7d5e2-8eb9-496d-8036-2191cb086479"
     }
   }
 }
