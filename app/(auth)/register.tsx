@@ -73,7 +73,7 @@ export default function RegisterScreen() {
               placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
               textContentType="username"
-              className="mb-4 text-text-primary dark:text-dark-text-primary"
+              className="text-text-primary dark:text-dark-text-primary"
             />
             <View className="mb-4 relative">
               <AppInput
@@ -90,7 +90,7 @@ export default function RegisterScreen() {
               />
               <Pressable
                 onPress={() => setPasswordVisible((v) => !v)}
-                className="absolute right-0 top-8 px-3 py-2"
+                className="absolute right-0 top-7 px-3 py-2"
                 style={{ height: 40, justifyContent: 'center' }}
                 accessibilityRole="button"
                 accessibilityLabel={passwordVisible ? "Hide password" : "Show password"}

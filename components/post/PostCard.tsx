@@ -3,11 +3,21 @@ import { useFollows } from '@/hooks/useFollows';
 import { useLikes } from '@/hooks/useLikes';
 import { useUser } from '@/hooks/useUser';
 import { storage } from '@/lib/appwrite';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 
 // Simple time ago function
 function timeAgo(dateString: string) {
@@ -64,6 +74,21 @@ function getLeaderProfileImgId(leaderData: any) {
   return leaderData.photoUrl || null;
 }
 
+// --- Upcoming Modal Content for Extra Feature ---
+const upcomingModalContent = [
+  {
+    title: "Upcoming Feature",
+    subtitle: "We're working on awesome updates!",
+    points: [
+      "Save & Bookmark Posts",
+      "Commenting coming soon",
+      "Post sharing",
+      "Personalized recommendations",
+    ],
+  }
+];
+const screen = Dimensions.get('window');
+
 export default function PostCard({ post }: any) {
   const router = useRouter();
   const { profile } = useUser();
@@ -80,9 +105,7 @@ export default function PostCard({ post }: any) {
     initialLikesCount: post.likesCount || 0,
   });
 
-  const isOwnPost =
-    post.leader === profile?.$id || post.leader?.$id === profile?.$id;
-
+  const isOwnPost = post.leader === profile?.$id || post.leader?.$id === profile?.$id;
   const leaderData = post.leader || {};
   const leaderId = leaderData?.$id || post.leader;
   const leaderImgId = getLeaderProfileImgId(leaderData);
@@ -93,6 +116,9 @@ export default function PostCard({ post }: any) {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  // For upcoming modal
+  const [upcomingModalVisible, setUpcomingModalVisible] = useState(false);
+
   // Sync follow state directly with redux (no local isFollowed state)
   const isFollowed = isFollowedGlobal(leaderId);
   const isTogglingFollow = isTogglingGlobal(leaderId);
@@ -102,30 +128,19 @@ export default function PostCard({ post }: any) {
 
   useEffect(() => {
     setProfileImgFailed(false);
-
     let url: string | null = null;
     if (leaderImgId) {
       url = getProfileImageUrl(leaderImgId);
-      if (__DEV__) {
-        console.debug('[PostCard] profileImgUrl:', url);
-      }
       setProfileImgUrl(url ?? null);
     } else {
       setProfileImgUrl(null);
     }
-    // No async/await needed, Appwrite SDK returns URL synchronously for view URL
-    // Only reload if user id or imgId changes
-     
   }, [leaderImgId]);
 
   useEffect(() => {
     let url: string | null = null;
     if (post.mediaUrl && isImageMediaUrl(post.mediaUrl)) {
       url = getPreviewUrl(post.mediaUrl);
-      // If running in development, log the generated preview image URL for debugging purposes
-      if (__DEV__) {
-        console.debug('[PostCard] post img preview url:', url);
-      }
       setImgUrl(url);
     } else {
       setImgUrl(null);
@@ -138,254 +153,307 @@ export default function PostCard({ post }: any) {
   const postedAt = post.$createdAt || post.createdAt;
   const showFaith = Boolean(leaderFaith);
 
-  // Simple follow handler (no async/await, no local setIsFollowed)
+  // Simple follow handler
   const handleToggleFollow = useCallback(() => {
-    // Ensure profile and leaderId are valid before proceeding
-    if (!profile?.$id || !leaderId || loadingFollow) {
-      console.warn('[PostCard] Cannot toggle follow: missing profile or leaderId', {
-        hasProfile: !!profile?.$id,
-        leaderId,
-        loadingFollow
-      });
-      return;
-    }
+    if (!profile?.$id || !leaderId || loadingFollow) return;
     toggleFollowApi(profile.$id, leaderId);
-    // Redux will update isFollowedGlobal as needed.
   }, [profile?.$id, leaderId, toggleFollowApi, loadingFollow]);
 
   return (
-    <View className="mb-4 rounded-2xl bg-surface dark:bg-dark-surface p-4 shadow-md">
+    <View className="rounded-2xl mb-6 bg-surface dark:bg-dark-surface shadow border border-tint-3 overflow-hidden relative">
+      {/* Decorative Top Bar */}
+      <View className="h-2 bg-gradient-to-r from-brand/10 via-primary/10 to-accent/10" />
 
-      {/* Header with who posted, profile image, leader, faith, and time */}
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-        gap: 10,
-      }}>
-        {/* Profile image, fallback icon, or initials */}
-        <View style={{
-          width: 44, height: 44, borderRadius: 22, backgroundColor: '#EBEEFA',
-          justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
-        }}>
-          {profileImgUrl && !profileImgFailed ? (
-            <Image
-              source={profileImgUrl}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: '#DDE3F2',
-              }}
-              contentFit="cover"
-              onError={() => setProfileImgFailed(true)}
-              accessibilityLabel="Poster profile image"
-            />
-          ) : profileImgFailed ? (
-            <Ionicons name="person-circle-outline" size={40} color="#B8BCD6" />
-          ) : (
-            <Ionicons name="person-outline" size={32} color="#B8BCD6" />
-          )}
-        </View>
-        {/* Leader name, faith, and time */}
-        <View className="flex-1 flex-col">
-          <View className="flex-row items-center flex-wrap">
-            <Pressable
-              onPress={() => {
-                if (leaderId) {
-                  router.push(`/${profile?.role === "worshiper" ? "(worshiper)"  : "(leader)"}/leaders/${leaderId}`);
-                }
-              }}
-            >
-              <Text
-                className="font-bold text-text-primary dark:text-dark-text-primary text-base mr-2"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={{ maxWidth: 150 }}
-              >
-                {leaderDisplay}
-              </Text>
-            </Pressable>
-            {showFaith && leaderFaith && (
-              <View className="flex-row items-center mr-2 mb-0.5">
-                {/* Use faith emoji or icon, then text */}
-                <Text
-                  className="font-medium text-xs tracking-tight"
-                  style={{ marginRight: 3 }}
-                >
-                  {leaderFaith === "Christian" && "✝️"}
-                  {leaderFaith === "Muslim" && "☪️"}
-                  {leaderFaith === "Jewish" && "✡️"}
-                  {leaderFaith === "Buddhist" && "☸️"}
-                  {leaderFaith === "Hindu" && "🕉️"}
-                  {leaderFaith === "Sikh" && "🪯"}
-                  {leaderFaith === "Other" && "🌈"}
-                </Text>
-                <Text className="text-text-secondary dark:text-dark-text-secondary font-medium text-xs tracking-tight">
-                  {leaderFaith}
-                </Text>
+      {/* Container */}
+      <View className="px-4 pt-3 pb-2">
+        {/* Header Section */}
+        <View className="flex-row items-start mb-4 gap-x-4">
+          {/* Profile */}
+          <Pressable
+            className="overflow-hidden rounded-full border-2 border-tint-2 shadow-sm"
+            style={{ width: 54, height: 54, backgroundColor: '#f3f4fa' }}
+            onPress={() => {
+              if (leaderId) {
+                router.push(`/${profile?.role === "worshiper" ? "(worshiper)" : "(leader)"}/leaders/${leaderId}`);
+              }
+            }}
+          >
+            {profileImgUrl && !profileImgFailed ? (
+              <Image
+                source={profileImgUrl}
+                style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: '#f3f4fa' }}
+                contentFit="cover"
+                onError={() => setProfileImgFailed(true)}
+                accessibilityLabel="Poster profile image"
+              />
+            ) : profileImgFailed ? (
+              <View className="flex-1 items-center justify-center">
+                <Ionicons name="person-circle-outline" size={46} color="#B8BCD6" />
+              </View>
+            ) : (
+              <View className="flex-1 items-center justify-center">
+                <Ionicons name="person-outline" size={34} color="#B8BCD6" />
               </View>
             )}
+          </Pressable>
+          {/* Main header: Name, faith, time */}
+          <View className="flex-1 flex-col">
+            <View className="flex-row items-center flex-wrap">
+              <Pressable
+                onPress={() => {
+                  if (leaderId) {
+                    router.push(`/${profile?.role === "worshiper" ? "(worshiper)" : "(leader)"}/leaders/${leaderId}`);
+                  }
+                }}
+              >
+                <Text
+                  className="font-bold text-lg tracking-tight text-text-primary dark:text-dark-text-primary mr-2 max-w-[150px]"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {leaderDisplay}
+                </Text>
+              </Pressable>
+              {showFaith && leaderFaith &&
+                <View className="flex-row items-center mr-2 mb-0.5">
+                  <Text className="font-semibold text-base mr-1">
+                    {leaderFaith === "Christian" && "✝️"}
+                    {leaderFaith === "Muslim" && "☪️"}
+                    {leaderFaith === "Jewish" && "✡️"}
+                    {leaderFaith === "Buddhist" && "☸️"}
+                    {leaderFaith === "Hindu" && "🕉️"}
+                    {leaderFaith === "Sikh" && "🪯"}
+                    {leaderFaith === "Other" && "🌈"}
+                  </Text>
+                  <Text className="text-sm font-semibold text-tint-4 text-text-primary dark:text-dark-text-primary">
+                    {leaderFaith}
+                  </Text>
+                </View>
+              }
+            </View>
+            <View className="flex-row items-center gap-x-2 mt-1">
+              <Ionicons name="time-outline" size={13} color="#b7a1e6" />
+              <Text className="text-xs font-normal text-tint-5 text-text-primary dark:text-dark-text-primary">
+                {timeAgo(postedAt)}
+              </Text>
+            </View>
           </View>
-          {/* Time */}
-          <Text className="text-xs mt-0.5 font-normal text-text-secondary dark:text-dark-text-secondary">
-            {timeAgo(postedAt)}
-          </Text>
+          {!isOwnPost && (
+            <Pressable
+              className={[
+                "pl-3 pr-3 py-2 rounded-full border flex-row items-center justify-center",
+                isFollowed ? "border-success bg-success/10" : "border-primary bg-primary/5"
+              ].join(" ")}
+              disabled={isTogglingFollow}
+              onPress={handleToggleFollow}
+              style={({ pressed }) => [
+                pressed && { opacity: 0.75, backgroundColor: isFollowed ? "#def2e1" : "#ede9fc" },
+                { minWidth: 90 }
+              ]}
+            >
+              {isTogglingFollow ?
+                <ActivityIndicator size="small" color={isFollowed ? "#6cbf43" : "#2667c9"} className="mr-2" /> :
+                isFollowed ?
+                  <>
+                    <Ionicons name="star" size={18} color="#6cbf43" className="mr-1" />
+                    <Text className="text-success font-semibold">Following</Text>
+                  </>
+                  :
+                  <>
+                    <Ionicons name="person-add" size={18} color="#7c69dc" className="mr-1" />
+                    <Text className="text-primary font-semibold">Follow</Text>
+                  </>
+              }
+            </Pressable>
+          )}
         </View>
-        {/* Follow/Unfollow button, not if it's own post */}
-        {!isOwnPost && (
+
+        {/* Image (if present) */}
+        {imgUrl && (
+          <>
+            <Pressable onPress={() => setModalVisible(true)} className="mb-3">
+              <View className="rounded-xl overflow-hidden border border-tint-3 bg-tint-3/10">
+                <Image
+                  source={{ uri: imgUrl }}
+                  style={{ width: screen.width - 44, height: 210, backgroundColor: '#e5e1f8' }}
+                  contentFit="cover"
+                />
+              </View>
+            </Pressable>
+            {/* Modal for fullscreen image */}
+            <Modal
+              visible={modalVisible}
+              animationType="fade"
+              transparent={true}
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                <View className="flex-1 justify-center items-center bg-black/90">
+                  <Image
+                    source={{ uri: imgUrl }}
+                    style={{ width: screen.width, height: screen.height * 0.7, borderRadius: 10, backgroundColor: "#18142e" }}
+                    contentFit="contain"
+                  />
+                  <TouchableOpacity
+                    className="absolute top-12 right-6 p-1 rounded-full"
+                    onPress={() => setModalVisible(false)}
+                    accessibilityLabel="Close Image"
+                  >
+                    <Ionicons name="close-circle" size={44} color="#e0e7fa" />
+                  </TouchableOpacity>
+                </View>
+              </TouchableWithoutFeedback>
+            </Modal>
+          </>
+        )}
+
+        {/* Post Content */}
+        {post.text && (
+          <View className="bg-tint-3/15 px-4 py-3 rounded-xl my-2 border border-tint-3 min-h-[36px]">
+            <Text className="font-semibold text-base leading-[22px] text-text-primary dark:text-dark-text-primary">
+              {post.text}
+            </Text>
+          </View>
+        )}
+
+        {/* Controls: Like, Comment, Share */}
+        <View className="mt-3 flex-row items-center justify-between gap-x-3">
+          {/* Like Button */}
           <Pressable
-            className="px-4 py-2 rounded-full border border-accent flex-row items-center justify-center"
+            className={[
+              "flex-row px-2 p-1 items-center rounded-full border",
+              liked
+                ? "border-error bg-error/10"
+                : "border-primary bg-primary/5",
+            ].join(" ")}
             style={({ pressed }) => [
+              pressed && {
+                opacity: 0.8,
+                backgroundColor: liked
+                  ? "#fbe4ee"
+                  : "#ede9fc",
+              },
               {
-                backgroundColor: pressed ? "#fff1f7" : "transparent",
-                minWidth: 90,
-                opacity: isTogglingFollow ? 0.7 : 1,
+                paddingVertical: 11,
+                paddingHorizontal: 18,
+                minWidth: 92,
               },
             ]}
-            onPress={handleToggleFollow}
-            disabled={isTogglingFollow}
+            onPress={toggleLike}
+            disabled={likeLoading}
+            accessibilityLabel={liked ? "Unlike" : "Like"}
           >
-            {isTogglingFollow ? (
-              <ActivityIndicator size="small" color={isFollowed ? "#6cbf43" : "#2667c9"} style={{ marginRight: 6 }} />
-            ) : isFollowed ? (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={18} color="#6cbf43" style={{ marginRight: 4 }} />
-                <Text className="text-green-700 font-medium">Following</Text>
-              </>
-            ) : (
-              <Text className="text-accent font-medium">Follow</Text>
+            <Ionicons
+              name={liked ? "heart" : "heart-outline"}
+              size={22}
+              color={liked ? "#DC2626" : "#2F6FED"}
+              className="mr-2"
+              style={{
+                marginRight: 8,
+                transform: [{ scale: liked ? 1.13 : 1 }],
+              }}
+            />
+            <Text
+              className={[
+                "mr-2 text-base tracking-wide",
+                liked
+                  ? "text-error dark:text-dark-error font-bold"
+                  : "text-primary dark:text-dark-primary font-medium",
+              ].join(" ")}
+            >
+              {liked ? "Liked" : "Like"}
+            </Text>
+            <Text
+              className="text-sm mr-1 text-text-secondary dark:text-dark-text-secondary"
+              style={{ minWidth: 28 }}
+            >
+              {likesCount || post.likesCount}
+            </Text>
+            {likeLoading && (
+              <ActivityIndicator
+                size="small"
+                color={liked ? "#DC2626" : "#2F6FED"}
+                style={{ marginLeft: 5 }}
+              />
             )}
           </Pressable>
-        )}
-      </View>
 
-      {/* Show image if available */}
-      {imgUrl && (
-        <>
-          <Pressable onPress={() => setModalVisible(true)}>
-            <Image
-              source={{ uri: imgUrl }}
-              style={{
-                width: '100%',
-                height: 220,
-                borderRadius: 16,
-                marginBottom: 14,
-                backgroundColor: '#efefef', // fallback background
-              }}
-              contentFit="cover"
+          {/* Comment Button (opens upcoming modal) */}
+          <Pressable
+            className="flex-row p-2 px-3 items-center rounded-full border border-border dark:border-dark-border bg-surface/50 dark:bg-dark-surface/50"
+            style={({ pressed }) => [
+              pressed && { opacity: 0.8 },
+              { paddingVertical: 11, paddingHorizontal: 14, minWidth: 75 }
+            ]}
+            onPress={() => setUpcomingModalVisible(true)}
+          >
+            <MaterialCommunityIcons
+              name="message-reply-text-outline"
+              size={20}
+              color="#2F6FED"
+              className="mr-2"
             />
+            <Text className="text-sm font-semibold text-primary dark:text-dark-primary">
+              Comment
+            </Text>
           </Pressable>
 
-          {/* Fullscreen Modal */}
-          <Modal
-            visible={modalVisible}
-            animationType="fade"
-            transparent={true}
-            onRequestClose={() => setModalVisible(false)}
+          {/* Share (also upcoming modal) */}
+          <Pressable
+            className="flex-row p-2 px-3 justify-center items-center rounded-full border border-accent bg-accent/10"
+            style={({ pressed }) => [
+              pressed && { opacity: 0.88 },
+              { paddingVertical: 11, paddingHorizontal: 14, minWidth: 72 }
+            ]}
+            onPress={() => setUpcomingModalVisible(true)}
           >
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: 'rgba(0,0,0,0.95)',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Image
-                source={{ uri: imgUrl }}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  resizeMode: 'contain',
-                  backgroundColor: '#000',
-                }}
-                contentFit="contain"
-              />
-              <TouchableOpacity
-                style={{
-                  position: 'absolute',
-                  top: 48,
-                  right: 0,
-                  padding: 12,
-                  borderRadius: 24,
-                }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                onPress={() => setModalVisible(false)}
-                accessibilityLabel="Close Image"
-              >
-                <Ionicons name="close" size={36} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </Modal>
-        </>
-      )}
-
-      {post.text ? (
-        <Text className="mt-1 font-semibold text-text-primary dark:text-dark-text-primary text-base">
-          {post.text}
-        </Text>
-      ) : null}
-
-      <View className="mt-4 flex-row items-center justify-between">
-        {/* Like Button with count and toggle */}
-        <Pressable
-          className="flex-row items-center rounded-full"
-          style={({ pressed }) => [
-            {
-              backgroundColor: pressed ? "#f6f6fa" : "#fff",
-              borderColor: liked ? "#e53935" : "#2667c9",
-              borderWidth: 1.5,
-              paddingVertical: 10,
-              paddingHorizontal: 18,
-              shadowColor: "#5770be",
-              shadowOpacity: pressed ? 0.20 : 0.08,
-              shadowRadius: pressed ? 9 : 5,
-              shadowOffset: { width: 0, height: 1 },
-              opacity: likeLoading ? 0.7 : 1,
-              elevation: pressed ? 2 : 1,
-              minWidth: 85,
-            },
-          ]}
-          onPress={toggleLike}
-          disabled={likeLoading}
-          accessibilityLabel={liked ? "Unlike" : "Like"}
-        >
-          <Ionicons
-            name={liked ? "heart" : "heart-outline"}
-            size={22}
-            color={liked ? "#e53935" : "#2667c9"}
-            style={{
-              marginRight: 8,
-              transform: [{ scale: liked ? 1.15 : 1 }],
-            }}
-          />
-          <Text
-            className={`mr-1 ${liked
-              ? "text-error font-bold"
-              : "text-accent font-medium"} text-base tracking-wide`}
-          >
-            {liked ? "Liked" : "Like"}
-          </Text>
-          <Text
-            className="text-text-secondary dark:text-dark-text-secondary text-sm mr-1"
-            style={{
-              marginRight: likeLoading ? 6 : 0,
-              minWidth: 28,
-              textAlign: "right"
-            }}
-          >
-            {likesCount || post.likesCount}
-          </Text>
-          {likeLoading && (
-            <ActivityIndicator
-              size="small"
-              color={liked ? "#e53935" : "#2667c9"}
-              style={{ marginLeft: 5 }}
+            <Ionicons
+              name="share-social-outline"
+              size={19}
+              color="#C9A24D"
+              className="mr-2"
             />
-          )}
-        </Pressable>
+            <Text className="text-sm font-semibold text-accent dark:text-dark-accent">
+              Share
+            </Text>
+          </Pressable>
+        </View>
       </View>
+
+      {/* Upcoming Modal */}
+      <Modal
+        visible={upcomingModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setUpcomingModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/60 justify-center items-center px-6">
+          <View className="bg-surface dark:bg-dark-surface rounded-3xl py-10 px-6 w-full max-w-xs items-center shadow-lg">
+            <Ionicons name="sparkles-outline" size={42} color="#885cf5" className="mb-2" />
+            <Text className="text-lg font-bold text-primary mb-2 text-center">
+              {upcomingModalContent[0].title}
+            </Text>
+            <Text className="text-base font-medium text-primary/70 mb-5 text-center">
+              {upcomingModalContent[0].subtitle}
+            </Text>
+            <ScrollView className="max-h-52 w-full self-center mb-3">
+              {upcomingModalContent[0].points.map(pt => (
+                <View key={pt} className="flex-row items-center mb-2">
+                  <Ionicons name="checkmark-circle" size={20} color="#945ef5" className="mr-3" />
+                  <Text className="text-base font-semibold text-text-primary">{pt}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              className="mt-5 bg-primary/10 rounded-full py-3 px-10 self-center shadow"
+              onPress={() => setUpcomingModalVisible(false)}
+              activeOpacity={0.89}
+            >
+              <Text className="text-base font-bold tracking-wider text-primary">Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

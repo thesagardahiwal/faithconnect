@@ -44,15 +44,6 @@ function getFaithEmoji(faith: string) {
   return emojiMap[faith] || '🌈';
 }
 
-function formatJoinedDate(dateStr: string | undefined): string {
-  if (!dateStr) return '';
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
-  } catch {
-    return '';
-  }
-}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -172,8 +163,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView className="flex-1 bg-background dark:bg-dark-background" showsVerticalScrollIndicator={false}>
-
+      <ScrollView className="flex-1 bg-background dark:bg-dark-background">
         {/* Profile Banner / Header */}
         <View className="bg-primary-soft dark:bg-dark-primary-soft pb-10 border-b border-border dark:border-dark-border">
           {/* Banner/cover - could eventually be image or color */}
@@ -234,7 +224,9 @@ export default function ProfileScreen() {
                     }}
                     className="px-4 py-2 rounded-full border border-border dark:border-dark-border"
                   >
-                    <Text className="text-text-secondary dark:text-dark-text-secondary font-medium">Cancel</Text>
+                    <Text>
+                      <Text className="text-text-secondary dark:text-dark-text-secondary font-medium">Cancel</Text>
+                    </Text>
                   </Pressable>
                   <Pressable
                     onPress={handleSave}
@@ -245,7 +237,9 @@ export default function ProfileScreen() {
                     {loading ? (
                       <ActivityIndicator size="small" color="white" />
                     ) : (
-                      <Text className="text-white font-semibold">Save</Text>
+                      <Text>
+                        <Text className="text-white font-semibold">Save</Text>
+                      </Text>
                     )}
                   </Pressable>
                 </View>
@@ -286,22 +280,30 @@ export default function ProfileScreen() {
                         : 'border-border dark:border-dark-border bg-surface dark:bg-dark-surface'
                     ].join(' ')}
                   >
-                    <Text className="mr-2 text-xl">{getFaithEmoji(f.name)}</Text>
-                    <Text
-                      className={[
-                        'font-semibold mr-1',
-                        faith === f.name ? 'text-primary dark:text-dark-primary' : 'text-text-secondary dark:text-dark-text-secondary'
-                      ].join(' ')}
-                    >
-                      {f.name}
+                    <Text>
+                      <Text className="mr-2 text-xl">{getFaithEmoji(f.name)}</Text>
+                    </Text>
+                    <Text>
+                      <Text
+                        className={[
+                          'font-semibold mr-1',
+                          faith === f.name ? 'text-primary dark:text-dark-primary' : 'text-text-secondary dark:text-dark-text-secondary'
+                        ].join(' ')}
+                      >
+                        {f.name}
+                      </Text>
                     </Text>
                   </Pressable>
                 ))}
               </View>
             ) : (
               <View className="flex-row items-center bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
-                <Text className="text-2xl mr-3">{getFaithEmoji(faith)}</Text>
-                <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{faith}</Text>
+                <Text>
+                  <Text className="text-2xl mr-3">{getFaithEmoji(faith)}</Text>
+                </Text>
+                <Text>
+                  <Text className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{faith}</Text>
+                </Text>
               </View>
             )}
           </View>
@@ -323,7 +325,9 @@ export default function ProfileScreen() {
               />
             ) : (
               <View className="bg-surface dark:bg-dark-surface p-4 rounded-xl border border-border dark:border-dark-border">
-                <Text className="text-base text-text-primary dark:text-dark-text-primary leading-6">{bio || 'No bio yet. Tap edit to add a bio.'}</Text>
+                <Text>
+                  <Text className="text-base text-text-primary dark:text-dark-text-primary leading-6">{bio || 'No bio yet. Tap edit to add a bio.'}</Text>
+                </Text>
               </View>
             )}
           </View>
@@ -333,12 +337,20 @@ export default function ProfileScreen() {
             <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">Account</Text>
             <View className="bg-surface dark:bg-dark-surface rounded-xl border border-border dark:border-dark-border overflow-hidden">
               <View className="px-4 py-3 border-b border-border dark:border-dark-border">
-                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mb-1">Email</Text>
-                <Text className="text-base text-text-primary dark:text-dark-text-primary font-medium">{user?.email || 'N/A'}</Text>
+                <Text>
+                  <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mb-1">Email</Text>
+                </Text>
+                <Text>
+                  <Text className="text-base text-text-primary dark:text-dark-text-primary font-medium">{user?.email || 'N/A'}</Text>
+                </Text>
               </View>
               <View className="px-4 py-3 flex-row items-center justify-between">
-                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">Account ID</Text>
-                <Text className="text-xs text-text-secondary">{user?.$id ? user.$id.slice(0, 8) + '...' : 'N/A'}</Text>
+                <Text>
+                  <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">Account ID</Text>
+                </Text>
+                <Text>
+                  <Text className="text-xs text-text-secondary">{user?.$id ? user.$id.slice(0, 8) + '...' : 'N/A'}</Text>
+                </Text>
               </View>
             </View>
           </View>
@@ -356,8 +368,12 @@ export default function ProfileScreen() {
                 <ActivityIndicator size="small" color="#DC2626" />
               ) : (
                 <>
-                  <Ionicons name="log-out-outline" size={20} color="#DC2626" style={{ marginRight: 8 }} />
-                  <Text className="text-red-600 dark:text-red-400 font-semibold text-base">Logout</Text>
+                  <Text>
+                    <Ionicons name="log-out-outline" size={20} color="#DC2626" style={{ marginRight: 8 }} />
+                  </Text>
+                  <Text>
+                    <Text className="text-red-600 dark:text-red-400 font-semibold text-base">Logout</Text>
+                  </Text>
                 </>
               )}
             </Pressable>

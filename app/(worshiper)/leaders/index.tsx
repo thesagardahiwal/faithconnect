@@ -23,7 +23,15 @@ function getProfileImageUrl(imgId: string | undefined): string | null {
   }
 }
 
-function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPress, onFollowPress }: {
+function LeaderCard({
+  isOwener,
+  worshiper,
+  leader,
+  isFollowed,
+  isToggling,
+  onPress,
+  onFollowPress
+}: {
   leader: any;
   worshiper: UserProfile;
   isOwener?: boolean;
@@ -57,37 +65,37 @@ function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPre
   return (
     <Pressable
       onPress={onPress}
-      className="mb-3 rounded-2xl bg-surface dark:bg-dark-surface p-4 shadow-sm border border-border dark:border-dark-border"
+      className="mb-5 rounded-2xl bg-surface dark:bg-dark-surface p-5 shadow-sm border border-border dark:border-dark-border transition-all duration-100"
+      android_ripple={{color: '#e5e7eb'}}
     >
       <View className="flex-row items-center">
         {/* Profile Image */}
-        <View className="mr-3">
-          <View
-            className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 items-center justify-center overflow-hidden"
-          >
+        <View className="mr-5">
+          <View className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 items-center justify-center overflow-hidden border-2 border-primary-soft dark:border-dark-primary-soft">
             {profileImgUrl && !imgFailed ? (
               <Image
                 source={{ uri: profileImgUrl }}
                 style={{ width: 64, height: 64 }}
                 contentFit="cover"
                 onError={() => setImgFailed(true)}
+                className="w-full h-full"
               />
             ) : (
-              <Ionicons name="person" size={32} color="#9CA3AF" />
+              <Ionicons name="person" size={34} color="#9CA3AF" />
             )}
           </View>
         </View>
 
         {/* Leader Info */}
-        <View className="flex-1">
-          <View className="flex mb-1">
-            <Text className="text-lg font-bold text-text-primary dark:text-dark-text-primary mr-2">
+        <View className="flex-1 min-w-0">
+          <View className="mb-1.5">
+            <Text className="text-lg font-bold text-text-primary dark:text-dark-text-primary mr-2" numberOfLines={1}>
               {leader.name}
             </Text>
             {leader.faith && (
-              <View className="flex-row items-center">
-                <Text className="text-sm mr-1">{getFaithEmoji(leader.faith)}</Text>
-                <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+              <View className="flex-row items-center mt-0.5">
+                <Text className="text-base mr-1">{getFaithEmoji(leader.faith)}</Text>
+                <Text className="text-sm text-text-secondary dark:text-dark-text-secondary font-medium" numberOfLines={1}>
                   {leader.faith}
                 </Text>
               </View>
@@ -95,7 +103,7 @@ function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPre
           </View>
           {leader.bio && (
             <Text
-              className="text-sm text-text-secondary dark:text-dark-text-secondary mb-2"
+              className="text-sm text-text-secondary dark:text-dark-text-secondary mb-1"
               numberOfLines={2}
             >
               {leader.bio}
@@ -103,9 +111,9 @@ function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPre
           )}
         </View>
 
-        {/* Follow Button */}
+        {/* Follow + Chat */}
         {!isOwener && (
-          <View className='flex-row items-center'>
+          <View className="flex-row items-center ml-3 space-x-2">
             <Pressable
               onPress={(e) => {
                 e.stopPropagation();
@@ -114,25 +122,27 @@ function LeaderCard({ isOwener, worshiper, leader, isFollowed, isToggling, onPre
                 }
               }}
               disabled={isToggling}
-              className="px-4 py-2 rounded-full border flex-row items-center"
+              className={`px-4 py-2 rounded-full border flex-row items-center transition-all ${
+                isFollowed
+                  ? 'border-success bg-success/10'
+                  : 'border-accent bg-transparent'
+              }`}
               style={{
-                borderColor: isFollowed ? '#6cbf43' : '#2667c9',
-                backgroundColor: isFollowed ? '#f0f9f0' : 'transparent',
                 opacity: isToggling ? 0.7 : 1,
               }}
             >
               {isToggling ? (
-                <ActivityIndicator size="small" color={isFollowed ? '#6cbf43' : '#2667c9'} />
+                <ActivityIndicator size="small" color={isFollowed ? '#16A34A' : '#C9A24D'} />
               ) : isFollowed ? (
                 <View className="flex-row items-center">
-                  <Ionicons name="checkmark-circle" size={18} color="#6cbf43" style={{ marginRight: 4 }} />
-                  <Text className="text-green-700 font-medium text-sm">Following</Text>
+                  <Ionicons name="checkmark-circle" size={18} color="#16A34A" style={{ marginRight: 4 }} />
+                  <Text className="text-success font-semibold text-sm">Following</Text>
                 </View>
               ) : (
-                <Text className="text-accent font-medium text-sm">Follow</Text>
+                <Text className="text-accent font-semibold text-sm">Follow</Text>
               )}
             </Pressable>
-            <StartChatButton isMeLeader={worshiper.role === "leader"} leaderId={leader.$id} worshiperId={worshiper.$id} compact={true}/>
+            <StartChatButton isMeLeader={worshiper.role === 'leader'} leaderId={leader.$id} worshiperId={worshiper.$id} compact={true} />
           </View>
         )}
       </View>
@@ -153,7 +163,8 @@ export default function ExploreLeaders() {
     if (profile?.$id) {
       loadMyLeaders(profile.$id);
     }
-  }, [loadAllLeaders, loadMyLeaders, profile?.$id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.$id]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -167,13 +178,16 @@ export default function ExploreLeaders() {
     }
   }, [loadAllLeaders, loadMyLeaders, profile?.$id]);
 
-  const filteredLeaders = leaders.filter((leader) =>
-    leader.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    leader.faith?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredLeaders = leaders.filter(
+    (leader) =>
+      leader.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      leader.faith?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleLeaderPress = (leaderId: string) => {
-    router.push(`/${profile?.role === "worshiper" ? "(worshiper)" : "(leader)"}/leaders/${leaderId}`);
+    router.push(
+      `/${profile?.role === 'worshiper' ? '(worshiper)' : '(leader)'}/leaders/${leaderId}`
+    );
   };
 
   const handleFollowPress = (leader: any) => {
@@ -185,8 +199,8 @@ export default function ExploreLeaders() {
     return (
       <Screen>
         <Header title="Discover Leaders" />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" />
+        <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
+          <ActivityIndicator size="large" color="#2F6FED" />
         </View>
       </Screen>
     );
@@ -197,7 +211,7 @@ export default function ExploreLeaders() {
       <Header title="Discover Leaders" />
 
       {/* Search Bar */}
-      <View className="mb-4">
+      <View className="mb-5">
         <View className="flex-row items-center bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-xl px-4 py-3">
           <Ionicons name="search" size={20} color="#9CA3AF" style={{ marginRight: 8 }} />
           <TextInput
@@ -205,7 +219,7 @@ export default function ExploreLeaders() {
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            className="flex-1 text-text-primary dark:text-dark-text-primary"
+            className="flex-1 text-text-primary dark:text-dark-text-primary text-base"
           />
           {searchQuery.length > 0 && (
             <Pressable onPress={() => setSearchQuery('')}>
@@ -228,7 +242,7 @@ export default function ExploreLeaders() {
             <LeaderCard
               leader={item}
               worshiper={profile as UserProfile}
-              isOwener = {profile?.$id === item.$id}
+              isOwener={profile?.$id === item.$id}
               isFollowed={isFollowed(item.$id)}
               isToggling={isToggling(item.$id)}
               onPress={() => handleLeaderPress(item.$id)}
@@ -237,7 +251,8 @@ export default function ExploreLeaders() {
           )}
           onRefresh={onRefresh}
           refreshing={refreshing}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 32 }}
+          ListFooterComponent={<View className="h-2" />}
         />
       )}
     </Screen>

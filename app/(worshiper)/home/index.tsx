@@ -70,41 +70,48 @@ export default function WorshiperHome() {
       />
 
       {/* 🔹 Tabs */}
-      <View className="flex-row border-b border-border dark:border-dark-border">
+      <View className="flex-row bg-surface dark:bg-dark-surface rounded-xl mx-4 mt-4 mb-2 p-1 shadow border border-border dark:border-dark-border">
         <Pressable
           onPress={() => setActiveTab('explore')}
-          className="flex-1 py-3 items-center"
+          className={`flex-1 flex-row items-center justify-center rounded-lg transition-all duration-150 ${
+            activeTab === 'explore'
+              ? 'bg-accent/90'
+              : 'bg-transparent'
+          }`}
+          style={({ pressed }) => pressed && activeTab !== 'explore'
+            ? { backgroundColor: '#F5EDF8' }
+            : {}}
         >
           <Text
-            className={`font-semibold ${
+            className={`px-2 py-2 text-base font-bold transition-all duration-150 tracking-wide rounded-lg ${
               activeTab === 'explore'
-                ? 'text-accent'
+                ? 'text-surface dark:text-dark-surface'
                 : 'text-text-secondary dark:text-dark-text-secondary'
             }`}
           >
             Explore
           </Text>
-          {activeTab === 'explore' && (
-            <View className="h-0.5 w-12 bg-accent mt-2 rounded-full" />
-          )}
         </Pressable>
-
         <Pressable
           onPress={() => setActiveTab('following')}
-          className="flex-1 py-3 items-center"
+          className={`flex-1 flex-row items-center justify-center rounded-lg transition-all duration-150 ${
+            activeTab === 'following'
+              ? 'bg-accent/90'
+              : 'bg-transparent'
+          }`}
+          style={({ pressed }) => pressed && activeTab !== 'following'
+            ? { backgroundColor: '#F5EDF8' }
+            : {}}
         >
           <Text
-            className={`font-semibold ${
+            className={`px-2 py-2 text-base font-bold transition-all duration-150 tracking-wide rounded-lg ${
               activeTab === 'following'
-                ? 'text-accent'
+                ? 'text-surface dark:text-dark-surface'
                 : 'text-text-secondary dark:text-dark-text-secondary'
             }`}
           >
             Following
           </Text>
-          {activeTab === 'following' && (
-            <View className="h-0.5 w-12 bg-accent mt-2 rounded-full" />
-          )}
         </Pressable>
       </View>
 

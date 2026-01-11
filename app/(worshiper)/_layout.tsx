@@ -6,16 +6,26 @@ export default function WorshiperLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  // Use correct tailwind color mapping
+  // See tailwind.config.js for colors
+  // bg-surface: #FFFFFF (light) | dark:bg-dark-surface: #111827 (dark)
+  // border: #E5E7EB (light) | dark:border-dark-border: #1F2937 (dark)
+
+  const tabBarBgColor = isDark ? '#111827' : '#FFFFFF';
+  const tabBarBorderColor = isDark ? '#1F2937' : '#E5E7EB';
+  const tabBarActiveTintColor = isDark ? '#5B8CFF' : '#2F6FED'; // theme.primary in each
+  const tabBarInactiveTintColor = isDark ? '#9CA3AF' : '#6B7280'; // text-secondary
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: isDark ? '#90cdf4' : '#2563eb', // blue-400/dark: blue-600
-        tabBarInactiveTintColor: isDark ? '#a1a1aa' : '#94a3b8', // zinc-400/slate-400
+        tabBarActiveTintColor,
+        tabBarInactiveTintColor,
         tabBarStyle: {
-          backgroundColor: isDark ? '#18181b' : '#fff', // dark:bg-neutral-900 / light:bg-white
+          backgroundColor: tabBarBgColor,
           borderTopWidth: 1,
-          borderTopColor: isDark ? '#27272a' : '#e5e7eb', // dark:border-neutral-800 / light:border-gray-200
+          borderTopColor: tabBarBorderColor,
         },
         tabBarLabelStyle: {
           fontSize: 12,

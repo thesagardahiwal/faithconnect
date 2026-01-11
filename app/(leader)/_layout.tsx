@@ -3,19 +3,23 @@ import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
 const getThemeColors = (colorScheme: string | null) => {
-  if (colorScheme === 'dark') {
-    return {
-      tabBarActiveTintColor: '#2F6FED', // Tailwind primary
-      tabBarInactiveTintColor: '#7C88A1', // Tailwind dark-text-tertiary or gray-400
-      tabBarBackground: '#111827', // Tailwind dark-bg
-      tabBarBorderTopColor: '#1F2937', // Tailwind dark-border
-    };
-  }
+  const isDark = colorScheme === 'dark';
+
+  // Use correct tailwind color mapping
+  // See tailwind.config.js for colors
+  // bg-surface: #FFFFFF (light) | dark:bg-dark-surface: #111827 (dark)
+  // border: #E5E7EB (light) | dark:border-dark-border: #1F2937 (dark)
+
+  const tabBarBgColor = isDark ? '#111827' : '#FFFFFF';
+  const tabBarBorderColor = isDark ? '#1F2937' : '#E5E7EB';
+  const tabBarActiveTintColor = isDark ? '#5B8CFF' : '#2F6FED'; // theme.primary in each
+  const tabBarInactiveTintColor = isDark ? '#9CA3AF' : '#6B7280'; // text-secondary
+
   return {
-    tabBarActiveTintColor: '#2F6FED', // Tailwind primary
-    tabBarInactiveTintColor: '#7C88A1', // Tailwind text-tertiary or gray-400
-    tabBarBackground: '#FFF', // Tailwind bg
-    tabBarBorderTopColor: '#E5E7EB', // Tailwind border
+    tabBarActiveTintColor,
+    tabBarInactiveTintColor,
+    tabBarBackground: tabBarBgColor,
+    tabBarBorderTopColor: tabBarBorderColor,
   };
 };
 
