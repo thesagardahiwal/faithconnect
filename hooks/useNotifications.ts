@@ -1,16 +1,55 @@
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loadNotifications } from '@/store/slices/notification.slice';
+import { APPWRITE_CONFIG } from '@/config/appwrite';
+import { client } from '@/lib/appwrite';
+import { notificationService } from '@/store/services/notification.service';
+import { useEffect, useState } from 'react';
 
-export const useNotifications = () => {
-  const dispatch = useAppDispatch();
-  const { list } = useAppSelector((state) => state.notifications);
+export function useNotifications(userId: string) {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
-  const loadUserNotifications = (userId: string) => {
-    dispatch(loadNotifications(userId));
+  const load = async () => {
+    if (!userId) return;
+    try {
+      const res = await notificationService.fetch(userId);
+      setNotifications(res.documents);
+    } catch (e) {
+      console.error("Failed to load notifications", e);
+    }
+  };
+
+  useEffect(() => {
+    load();
+
+    const unsubscribe = client.subscribe(
+      `databases.${APPWRITE_CONFIG.databaseId}.collections.${APPWRITE_CONFIG.collections.notifications}.documents`,
+      (res) => {
+        console.log(res.payload);
+        if (res.payload?.to?.$id === userId) {
+          setNotifications(prev => [res.payload, ...prev]);
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [userId]);
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      // Optimistic update
+      setNotifications(prev =>
+        prev.map(n => n.$id === notificationId ? { ...n, read: true } : n)
+      );
+      await notificationService.markAsRead(notificationId);
+    } catch (error) {
+      console.warn("Failed to mark notification as read:", error);
+      // Revert if needed, but for read status it's usually fine to stay read
+    }
   };
 
   return {
-    notifications: list,
-    loadUserNotifications,
+    notifications,
+    unreadCount,
+    reload: load,
+    markAsRead,
   };
-};
+}

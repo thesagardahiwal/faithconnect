@@ -4,6 +4,7 @@ import { useLikes } from '@/hooks/useLikes';
 import { useTheme } from '@/hooks/useTheme';
 import { useUser } from '@/hooks/useUser';
 import { storage } from '@/lib/appwrite';
+import { cacheImage } from '@/utils/imageCache';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -89,7 +90,7 @@ const upcomingModalContent = [
 ];
 const screen = Dimensions.get('window');
 
-export default function PostCard({ post }: any) {
+export default function PostCard({ post, hideCommentButton = false }: { post: any, hideCommentButton?: boolean }) {
   const router = useRouter();
   const { profile } = useUser();
   const { isDark } = useTheme();
@@ -139,13 +140,33 @@ export default function PostCard({ post }: any) {
   }, [leaderImgId]);
 
   useEffect(() => {
-    let url: string | null = null;
-    if (post.mediaUrl && isImageMediaUrl(post.mediaUrl)) {
-      url = getPreviewUrl(post.mediaUrl);
-      setImgUrl(url);
-    } else {
-      setImgUrl(null);
+    let cancelled = false;
+
+    async function loadImage() {
+      if (post.mediaUrl && isImageMediaUrl(post.mediaUrl)) {
+        const remoteUrl = getPreviewUrl(post.mediaUrl);
+        if (remoteUrl) {
+          try {
+            const file = await cacheImage(remoteUrl, post.mediaUrl);
+            if (!cancelled) {
+              setImgUrl(file.uri);
+            }
+          } catch (e) {
+            console.error("Failed to cache image:", e);
+            // Fallback to remote if caching fails?
+            if (!cancelled) setImgUrl(remoteUrl);
+          }
+        }
+      } else {
+        if (!cancelled) setImgUrl(null);
+      }
     }
+
+    loadImage();
+
+    return () => {
+      cancelled = true;
+    };
   }, [post.mediaUrl]);
 
   // Prepare leader values
@@ -438,32 +459,42 @@ export default function PostCard({ post }: any) {
           </Pressable>
 
           {/* Comment Button (opens upcoming modal) */}
-          <Pressable
-            className={[
-              "flex-row p-2 px-3 items-center rounded-full border",
-              isDark
-                ? "bg-dark-bg-tertiary border-dark-border/26"
-                : "bg-bg-secondary border-border/30"
-            ].join(" ")}
-            style={({ pressed }) => ({
-              paddingVertical: 11,
-              paddingHorizontal: 14,
-              minWidth: 75,
-              shadowOpacity: 0,
-              opacity: pressed ? 0.8 : 1,
-            })}
-            onPress={() => setUpcomingModalVisible(true)}
-          >
-            <MaterialCommunityIcons
-              name="message-reply-text-outline"
-              size={20}
-              color={isDark ? "#baa8ef" : "#7b5cf5"}
-              className="mr-2"
-            />
-            <Text className="text-sm font-semibold text-primary dark:text-dark-primary">
-              Comment
-            </Text>
-          </Pressable>
+          {!hideCommentButton && (
+            <Pressable
+              className={[
+                "flex-row p-2 px-3 items-center rounded-full border",
+                isDark
+                  ? "bg-dark-bg-tertiary border-dark-border/26"
+                  : "bg-bg-secondary border-border/30"
+              ].join(" ")}
+              style={({ pressed }) => ({
+                paddingVertical: 11,
+                paddingHorizontal: 14,
+                minWidth: 75,
+                shadowOpacity: 0,
+                opacity: pressed ? 0.8 : 1,
+              })}
+              onPress={() => {
+                if (profile?.role === "worshiper")
+                  router.push({ pathname: "/(worshiper)/comments/[id]", params: { id: post.$id } });
+                else
+                  router.push({ pathname: "/(leader)/comments/[id]", params: { id: post.$id } });
+              }}
+            >
+              <MaterialCommunityIcons
+                name="message-reply-text-outline"
+                size={20}
+                color={isDark ? "#baa8ef" : "#7b5cf5"}
+                className="mr-2"
+              />
+              <Text className="text-sm font-semibold text-primary dark:text-dark-primary">
+                Comment
+              </Text>
+              <Text className="text-sm ml-1.5 text-text-secondary dark:text-dark-text-secondary">
+                {post.comments?.length || post.commentsCount || 0}
+              </Text>
+            </Pressable>
+          )}
 
           {/* Share (also upcoming modal) */}
           <Pressable

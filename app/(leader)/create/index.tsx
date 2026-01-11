@@ -63,20 +63,20 @@ export default function CreateContent() {
             Share your blessings, wisdom, messages or prayer moments with your followers in a visually beautiful way.
           </Text>
           <View className="mt-5 flex-row gap-5">
-            <View className={isDark 
-              ? 'bg-dark-primary p-2 rounded-xl shadow-sm' 
+            <View className={isDark
+              ? 'bg-dark-primary p-2 rounded-xl shadow-sm'
               : 'bg-primary/30 p-2 rounded-xl shadow-sm'
             }>
               <MaterialCommunityIcons name="star-four-points" size={28} color="#C9A24D" />
             </View>
-            <View className={isDark 
-              ? 'bg-dark-primary p-2 rounded-xl shadow-sm' 
+            <View className={isDark
+              ? 'bg-dark-primary p-2 rounded-xl shadow-sm'
               : 'bg-primary/30 p-2 rounded-xl shadow-sm'
             }>
-              <Ionicons name="medal-outline" size={28} color="#5B8CFF" />
+              <Ionicons name="medal-outline" size={28} color="#FFF" />
             </View>
-            <View className={isDark 
-              ? 'bg-dark-primary p-2 rounded-xl shadow-sm' 
+            <View className={isDark
+              ? 'bg-dark-primary p-2 rounded-xl shadow-sm'
               : 'bg-primary/30 p-2 rounded-xl shadow-sm'
             }>
               <FontAwesome5 name="users" size={25} color={isDark ? "#fff" : "#2F6FED"} />
@@ -102,7 +102,7 @@ export default function CreateContent() {
               }}
             />
           }
-          description="Share an announcement, message, or scripture."
+          description="Share a message or scripture."
         />
 
         <CreateActionButton
@@ -165,8 +165,8 @@ export default function CreateContent() {
           />
           <Text className="text-sm font-semibold text-accent dark:text-dark-accent">Premium</Text>
         </View>
-        <Text className="text-xs text-text-secondary dark:text-dark-text-secondary font-medium text-right" style={{ maxWidth: 230 }}>
-          Get access to advanced creation tools, event scheduling, analytics and more. 
+        <Text className="text-xs text-text-secondary dark:text-dark-text-secondary font-medium text-left" style={{ maxWidth: 230 }}>
+          Get access to advanced creation tools, event scheduling, analytics and more.
           <Text className="text-accent dark:text-dark-accent"> Upgrade coming soon.</Text>
         </Text>
       </View>

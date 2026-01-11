@@ -1,5 +1,6 @@
 import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { useLikes } from '@/hooks/useLikes';
+import { useUser } from '@/hooks/useUser';
 import { storage } from '@/lib/appwrite';
 import { getMediaUrl } from '@/store/services/media.service';
 import { cacheReel } from '@/utils/reelCache';
@@ -7,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Dimensions, Pressable, Text, View } from 'react-native';
@@ -59,6 +60,8 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
     isPlaying: player.playing,
   });
   const tabBarHeight = useBottomTabBarHeight();
+  const router = useRouter();
+  const { profile } = useUser();
 
   const { liked, likesCount, toggleLike } = useLikes({
     postId: reel?.$id,
@@ -67,26 +70,26 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
 
   const [profileImgUrl, setProfileImgUrl] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  
+
   const leader = typeof reel?.leader === 'object' ? reel.leader : null;
 
   /* ---------------- effects ---------------- */
   useEffect(() => {
     let cancelled = false;
-  
+
     async function loadReel() {
       if (!reel?.mediaUrl) return;
-  
+
       const remoteUrl = String(getMediaUrl(reel.mediaUrl, 'video'));
       const file = await cacheReel(remoteUrl, reel.mediaUrl);
-  
+
       if (!cancelled) {
         setVideoUri(file.uri); // 👈 LOCAL FILE URI
       }
     }
-  
+
     loadReel();
-  
+
     return () => {
       cancelled = true;
     };
@@ -154,7 +157,7 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
     return (
       <View
         style={{
-          height: SCREEN_HEIGHT ,
+          height: SCREEN_HEIGHT,
           backgroundColor: '#000',
           justifyContent: 'center',
           alignItems: 'center',
@@ -171,11 +174,11 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
   /* ---------------- render ---------------- */
 
   return (
-    <View style={{ 
-      backgroundColor: '#000', 
+    <View style={{
+      backgroundColor: '#000',
       height: SCREEN_HEIGHT,
       paddingBottom: tabBarHeight,
-      }}>
+    }}>
       {/* Video */}
       <Pressable
         onPress={() => (isPlaying ? player.pause() : player.play())}
@@ -225,6 +228,24 @@ export default function ReelCard({ reel, isActive, onPress }: ReelCardProps) {
             color={liked ? '#ff3040' : 'white'}
           />
           <Text className="text-white text-xs mt-1">{likesCount}</Text>
+        </Pressable>
+
+        {/* Comment */}
+        <Pressable
+          onPress={() => {
+            if (profile?.role === "worshiper")
+              router.push({ pathname: "/(worshiper)/comments/[id]", params: { id: reel.$id } });
+            else
+              router.push({ pathname: "/(leader)/comments/[id]", params: { id: reel.$id } });
+          }}
+          className="items-center"
+        >
+          <Ionicons
+            name="chatbubble-outline"
+            size={30}
+            color="white"
+          />
+          <Text className="text-white text-xs mt-1">{reel.comments?.length || 0}</Text>
         </Pressable>
 
         {/* Mute */}

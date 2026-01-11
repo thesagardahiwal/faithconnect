@@ -1,6 +1,7 @@
 import { APPWRITE_CONFIG } from '@/config/appwrite';
 import { client, databases } from '@/lib/appwrite';
 import { getItem } from '@/lib/manageStorage';
+import { notificationService } from '@/store/services/notification.service';
 import { PROFILE_KEY } from '@/store/slices/user.slice';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
@@ -110,6 +111,38 @@ export const useChat = (chatId: string, userId: string) => {
             lastMessageAt: newMsg.$createdAt
           }
         );
+
+        // 5. Notification
+        // We need to know who to send it to.
+        // We can fetch the chat to find out, or ideally we already have it.
+        // For efficiency, we should have fetched the chat earlier.
+        // But to keep it simple and robust, let's fetch the chat here if we don't have stored receiver.
+        // Or better: Fetch chat on mount and store receiverId.
+
+        // Fetch chat logic inline for now to ensure correctness
+        const chatDoc = await databases.getDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.chats,
+          chatId
+        );
+
+        let receiverId = '';
+        const w = (chatDoc.worshiper as any)?.$id || chatDoc.worshiper;
+        const l = (chatDoc.leader as any)?.$id || chatDoc.leader;
+
+        if (w === actualUserId) receiverId = l;
+        else if (l === actualUserId) receiverId = w;
+
+        if (receiverId) {
+          await notificationService.create({
+            to: receiverId,
+            from: actualUserId,
+            type: 'message',
+            chat: chatId,
+            text: 'sent you a message',
+          });
+        }
+
       } catch (error) {
         console.error("Failed to send message:", error);
         Alert.alert('Error', 'Failed to send message. Please try again.');

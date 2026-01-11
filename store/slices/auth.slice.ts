@@ -6,6 +6,7 @@ import * as authService from '../services/auth.service';
 
 const USER_KEY = 'user_info';
 const PROFILE_KEY = 'user_profile';
+const PROFILE_ID_KEY = 'user_profile_id';
 
 async function storeUser(user: Models.User<Models.Preferences>) {
   try {
@@ -26,6 +27,7 @@ async function clearStoredUser() {
 async function clearStoredProfile() {
   try {
     await removeItem(PROFILE_KEY);
+    await removeItem(PROFILE_ID_KEY);
   } catch {
     // Ignore
   }
@@ -158,7 +160,7 @@ const authSlice = createSlice({
             (typeof action.payload === 'string'
               ? action.payload
               : action.error?.message ||
-                "Invalid email or password. Please try again.") as string,
+              "Invalid email or password. Please try again.") as string,
         });
       })
       .addCase(register.pending, (state) => {
@@ -184,7 +186,7 @@ const authSlice = createSlice({
             (typeof action.payload === 'string'
               ? action.payload
               : action.error?.message ||
-                "Unable to create account. Please check your info and try again.") as string,
+              "Unable to create account. Please check your info and try again.") as string,
         });
       });
   },

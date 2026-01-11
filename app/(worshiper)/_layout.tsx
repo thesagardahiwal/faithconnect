@@ -91,30 +91,36 @@ export default function WorshiperLayout() {
         }}
       />
 
-        <Tabs.Screen
-            name='leaders/[leaderId]'
-            options={{
-                href: null
-            }}
-        />
-        <Tabs.Screen
-            name='chats/[chatId]'
-            options={{
-                href: null
-            }}
-        />
-        <Tabs.Screen
-            name='notifications/index'
-            options={{
-                href: null
-            }}
-        />
-        <Tabs.Screen
-            name='home/post/[id]'
-            options={{
-                href: null
-            }}
-        />
+      <Tabs.Screen
+        name='leaders/[leaderId]'
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name='chats/[chatId]'
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name='notifications/index'
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name='home/post/[id]'
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name="comments/[id]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

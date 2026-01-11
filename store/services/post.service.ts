@@ -8,6 +8,9 @@ export const fetchExplorePosts = () =>
     Query.select([
       '*',          // all reel fields
       'leader.*',   // 👈 populate leader profile
+      'comments.*', // 👈 populate comments
+      "comments.author.*",
+      'likes.*',    // 👈 populate likes
     ]),
     Query.orderDesc('$createdAt'),
   ]);
@@ -18,6 +21,9 @@ export const fetchReels = () =>
     Query.select([
       '*',          // all reel fields
       'leader.*',   // 👈 populate leader profile
+      'comments.*', // 👈 populate comments
+      "comments.author.*",
+      'likes.*',    // 👈 populate likes
     ]),
     Query.orderDesc('$createdAt'),
   ]);
@@ -32,6 +38,9 @@ export const fetchPostsByLeader = (leaderId: string) =>
     Query.select([
       '*',
       'leader.*',
+      'comments.*', // 👈 populate comments
+      "comments.author.*",
+      'likes.*',    // 👈 populate likes
     ]),
     Query.orderDesc('$createdAt'),
   ]);
@@ -46,12 +55,15 @@ export const fetchReelsByLeader = (leaderId: string) =>
     Query.select([
       '*',
       'leader.*',
+      'comments.*', // 👈 populate comments
+      "comments.author.*",
+      'likes.*',    // 👈 populate likes
     ]),
     Query.orderDesc('$createdAt'),
   ]);
 
 
-  export const fetchPostById = (postId: string) => {
+export const fetchPostById = (postId: string) => {
   return databases.getDocument(
     APPWRITE_CONFIG.databaseId,
     APPWRITE_CONFIG.collections.posts,
@@ -59,8 +71,11 @@ export const fetchReelsByLeader = (leaderId: string) =>
     [
       Query.select([
         "*",
-        "leader.*"
+        "leader.*",
+        "comments.*", // 👈 populate comments
+        "comments.author.*",
+        "likes.*",    // 👈 populate likes
       ])
     ]
   );
-  }
+}

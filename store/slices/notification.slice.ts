@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { fetchNotifications } from '../services/notification.service';
+import { notificationService } from '../services/notification.service';
 
 export const loadNotifications = createAsyncThunk(
   'notifications/load',
-  fetchNotifications
+  notificationService.fetch
 );
 
 interface NotificationState {

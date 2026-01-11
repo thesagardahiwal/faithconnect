@@ -3,6 +3,7 @@ import Header from '@/components/common/Header';
 import Screen from '@/components/common/Screen';
 import PostCard from '@/components/post/PostCard';
 import { useFollows } from '@/hooks/useFollows';
+import { useNotifications } from '@/hooks/useNotifications';
 import { usePosts } from '@/hooks/usePosts';
 import { useUser } from '@/hooks/useUser';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,17 +13,24 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 
 type TabType = 'explore' | 'following';
 
-export default function WorshiperHome() {
+interface WorshiperHomeProps {
+  notificationPath?: string;
+}
+
+export default function WorshiperHome({ notificationPath = '/(worshiper)/notifications' }: WorshiperHomeProps) {
   const router = useRouter();
   const { explore: posts, loadExplore } = usePosts();
-  const { profile } = useUser();
+  const { profile, profileId } = useUser();
   const { myLeaders, loadMyLeaders } = useFollows();
+
+  const { unreadCount } = useNotifications(profileId || '');
+
   const explore = posts.map(post => {
     const leaderId =
       typeof post.leader === 'string'
         ? post.leader
         : post.leader?.$id;
-  
+
     return {
       ...post,
       isFollowed: myLeaders.some(l => l.leader === leaderId),
@@ -63,8 +71,17 @@ export default function WorshiperHome() {
       <Header
         title="Explore"
         right={
-          <Pressable onPress={() => router.push('/(worshiper)/notifications')}>
-            <Ionicons name="notifications-outline" size={24} color="#2667c9" />
+          <Pressable onPress={() => router.push(notificationPath as any)}>
+            <View>
+              <Ionicons name="notifications-outline" size={24} color="#2667c9" />
+              {unreadCount > 0 && (
+                <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[16px] h-4 items-center justify-center px-[2px] border border-surface dark:border-dark-surface">
+                  <Text className="text-[10px] text-white font-bold leading-3">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </Pressable>
         }
       />
@@ -73,42 +90,38 @@ export default function WorshiperHome() {
       <View className="flex-row bg-surface dark:bg-dark-surface rounded-xl mx-4 mt-4 mb-2 p-1 shadow border border-border dark:border-dark-border">
         <Pressable
           onPress={() => setActiveTab('explore')}
-          className={`flex-1 flex-row items-center justify-center rounded-lg transition-all duration-150 ${
-            activeTab === 'explore'
+          className={`flex-1 flex-row items-center justify-center rounded-lg transition-all duration-150 ${activeTab === 'explore'
               ? 'bg-accent/90'
               : 'bg-transparent'
-          }`}
+            }`}
           style={({ pressed }) => pressed && activeTab !== 'explore'
             ? { backgroundColor: '#F5EDF8' }
             : {}}
         >
           <Text
-            className={`px-2 py-2 text-base font-bold transition-all duration-150 tracking-wide rounded-lg ${
-              activeTab === 'explore'
+            className={`px-2 py-2 text-base font-bold transition-all duration-150 tracking-wide rounded-lg ${activeTab === 'explore'
                 ? 'text-surface dark:text-dark-surface'
                 : 'text-text-secondary dark:text-dark-text-secondary'
-            }`}
+              }`}
           >
             Explore
           </Text>
         </Pressable>
         <Pressable
           onPress={() => setActiveTab('following')}
-          className={`flex-1 flex-row items-center justify-center rounded-lg transition-all duration-150 ${
-            activeTab === 'following'
+          className={`flex-1 flex-row items-center justify-center rounded-lg transition-all duration-150 ${activeTab === 'following'
               ? 'bg-accent/90'
               : 'bg-transparent'
-          }`}
+            }`}
           style={({ pressed }) => pressed && activeTab !== 'following'
             ? { backgroundColor: '#F5EDF8' }
             : {}}
         >
           <Text
-            className={`px-2 py-2 text-base font-bold transition-all duration-150 tracking-wide rounded-lg ${
-              activeTab === 'following'
+            className={`px-2 py-2 text-base font-bold transition-all duration-150 tracking-wide rounded-lg ${activeTab === 'following'
                 ? 'text-surface dark:text-dark-surface'
                 : 'text-text-secondary dark:text-dark-text-secondary'
-            }`}
+              }`}
           >
             Following
           </Text>

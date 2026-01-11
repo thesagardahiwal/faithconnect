@@ -152,6 +152,19 @@ export default function LeaderLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="comments/[id]"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name='notifications/index'
+        options={{
+          href: null
+        }}
+      />
     </Tabs>
   );
 }

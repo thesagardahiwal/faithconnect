@@ -95,6 +95,12 @@ export default function ProfileScreen() {
     }
     setLoading(true);
     try {
+      console.log('Updating profile', {
+        name: name.trim(),
+        faith: faith.trim(),
+        bio: bio.trim() || undefined,
+        photoUrl,
+      });
       await updateUserProfile(profile.$id, {
         name: name.trim(),
         faith: faith.trim(),
@@ -236,7 +242,7 @@ export default function ProfileScreen() {
           </View>
         </View>
         <View className="px-5 pt-8 pb-20">
-          
+
           <View className="mb-6">
             <Text className="mb-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
               Name

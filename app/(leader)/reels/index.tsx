@@ -41,7 +41,7 @@ export default function LeaderReelsScreen() {
     itemVisiblePercentThreshold: 50,
   };
 
-  if (reelsLoading) {
+  if (reelsLoading || reels.length === 0) {
     return (
       <Screen>
         <Header title="My Reels" />
@@ -53,42 +53,42 @@ export default function LeaderReelsScreen() {
   }
 
   return (
-      <View className='' style={{ flex: 1, backgroundColor: '#000', padding: 10}}>
-        <FlatList
-          ref={flatListRef}
-          data={reels}
-          keyExtractor={(item) => item.$id}
-          onRefresh={onRefresh}
-          refreshing={refreshing}
-          renderItem={({ item, index }) => (
-            <ReelCard onPress={() => {
-              if (profile && profile.role === "leader") {
-                if (profile.$id !== item.$id) {
-                  router.push({pathname: "/(leader)/leaders/[leaderId]", params: {leaderId: item.$id}});
-                } else {
-                  router.push("/(leader)/profile");
-                }
+    <View className='' style={{ flex: 1, backgroundColor: '#000', padding: 10 }}>
+      <FlatList
+        ref={flatListRef}
+        data={reels}
+        keyExtractor={(item) => item.$id}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        renderItem={({ item, index }) => (
+          <ReelCard onPress={() => {
+            if (profile && profile.role === "leader") {
+              if (profile.$id !== item.$id) {
+                router.push({ pathname: "/(leader)/leaders/[leaderId]", params: { leaderId: item.$id } });
+              } else {
+                router.push("/(leader)/profile");
               }
+            }
 
-              if (profile && profile.role === "worshiper") {
-                router.push({pathname: "/(worshiper)/leaders/[leaderId]", params: {leaderId: item.$id}});
-              }
-            }} reel={item} isActive={index === activeIndex} />
-          )}
-          pagingEnabled
-          snapToInterval={SCREEN_HEIGHT}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          showsVerticalScrollIndicator={false}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          ListEmptyComponent={
-            <EmptyState
-              title="No reels yet"
-              text="There are no reels available at the moment. Pull to refresh or check back later!"
-            />
-          }
-        />
-      </View>
+            if (profile && profile.role === "worshiper") {
+              router.push({ pathname: "/(worshiper)/leaders/[leaderId]", params: { leaderId: item.$id } });
+            }
+          }} reel={item} isActive={index === activeIndex} />
+        )}
+        pagingEnabled
+        snapToInterval={SCREEN_HEIGHT}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        showsVerticalScrollIndicator={false}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        ListEmptyComponent={
+          <EmptyState
+            title="No reels yet"
+            text="There are no reels available at the moment. Pull to refresh or check back later!"
+          />
+        }
+      />
+    </View>
   );
 }

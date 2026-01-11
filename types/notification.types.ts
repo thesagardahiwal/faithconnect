@@ -1,17 +1,37 @@
-import { AppwriteDocument } from './appwrite.types';
+import { AppwriteDocument } from "./appwrite.types";
+import { UserProfile } from "./user.types";
 
+/**
+ * All supported notification types
+ */
 export type NotificationType =
-  | 'post'
-  | 'reel'
-  | 'message'
   | 'like'
   | 'comment'
-  | 'follow';
+  | 'follow'
+  | 'message';
 
+/**
+ * Notification document interface
+ */
 export interface Notification extends AppwriteDocument {
-  user: string;            // relationship → users_profile
+  /** Receiver of the notification */
+  to: UserProfile;
+
+  /** Sender (optional: system notifications may not have sender) */
+  from?: UserProfile;
+
+  /** Notification category */
   type: NotificationType;
-  referenceId?: string;    // postId / chatId
-  isRead?: boolean;
-  createdAt: string;
+
+  /** Related post (like/comment) */
+  post?: string;
+
+  /** Related chat (message) */
+  chat?: string;
+
+  /** Short preview text */
+  text?: string;
+
+  /** Read status */
+  read: boolean;
 }

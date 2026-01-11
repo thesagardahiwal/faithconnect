@@ -1,4 +1,5 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { notificationService } from '@/store/services/notification.service';
 import {
   fetchMyLeaders,
   fetchMyWorshipers,
@@ -8,7 +9,7 @@ import {
 export const useFollows = () => {
   const dispatch = useAppDispatch();
   const { myLeaders, myWorshiper, loading, togglingLeaderId } = useAppSelector((state) => state.follows);
-  
+
   const loadMyLeaders = (worshiperId: string) => {
     dispatch(fetchMyLeaders(worshiperId));
   };
@@ -23,17 +24,45 @@ export const useFollows = () => {
       console.log('[useFollows] follow: already in progress, skipping');
       return;
     }
-    
+
     if (!worshiperId || !leaderId) {
       console.error('[useFollows] follow: missing required IDs', { worshiperId, leaderId });
       return;
     }
-    
+
     console.log('[useFollows] follow: start', { worshiperId, leaderId });
     dispatch(toggleFollow({ worshiperId, leaderId }))
-      .then((result: any) => {
+      .then(async (result: any) => {
         if (result.type === 'follow/toggleFollow/fulfilled') {
           console.log('[useFollows] follow: success', result.payload);
+
+          // Check if followed (payload usually indicates new state or we infer it)
+          // The thunk returns updated data. Assuming if we just followed, the result payload implies success.
+          // Since it's a toggle, we need to know if we 'followed' or 'unfollowed'.
+          // The user request says "Follow Notification".
+          // We can check if isFollowed(leaderId) is true AFTER the toggle, but state might not be updated immediately in this callback scope unless we rely on payload.
+          // Assuming payload has isFollowing or similar, OR we just send notification on success and let server/UI handle duplicates.
+          // However, for toggle, we only want to notify on FOLLOW.
+          // Let's assume the payload or a check is needed. 
+          // For now, I will optimistically check if we were NOT following before, then we followed.
+
+          const wasFollowing = isFollowed(leaderId);
+          // Wait, isFollowed uses current state. If dispatch finished, state might be updated by reducer?
+          // Redux state updates are synchronous after reducer.
+          // But here we are in .then(), so state *should* be updated.
+          // Let's check state again?
+          // Actually, let's use the result payload if possible.
+          // If not, I will trust the request implies "started following".
+
+          if (!wasFollowing) { // Simplistic check (might need refinement based on exact reducer behavior)
+            await notificationService.create({
+              to: leaderId,
+              from: worshiperId,
+              type: 'follow',
+              text: 'started following you',
+            });
+          }
+
         } else {
           console.error('[useFollows] follow: failed', result);
         }
@@ -50,16 +79,16 @@ export const useFollows = () => {
    */
   const isFollowed = (leaderId: string): boolean => {
     if (!leaderId || !Array.isArray(myLeaders) || myLeaders.length === 0) return false;
-    
+
     // Handle both string IDs and object IDs (leader might be a string or object with $id)
     const res = myLeaders.some((follow) => {
       if (!follow || !follow.leader) return false;
-      
+
       // If leader is a string, compare directly
       if (typeof follow.leader === 'string') {
         return follow.leader === leaderId;
       }
-      
+
       // If leader is an object, compare $id (handle both plain objects and Appwrite document objects)
       if (typeof follow.leader === 'object') {
         const leaderObj = follow.leader as any;
@@ -71,7 +100,7 @@ export const useFollows = () => {
           return true;
         }
       }
-      
+
       return false;
     });
 

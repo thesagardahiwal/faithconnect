@@ -1,10 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
-import {
-    checkIsLiked,
-    likePost,
-    unlikePost,
-} from '@/store/services/like.service';
-import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { notificationService } from '@/store/services/notification.service';
+import { toggleLikeOptimistic, togglePostLike } from '@/store/slices/post.slice';
+import { useState } from 'react';
 
 interface UseLikesParams {
   postId: string;
@@ -16,47 +14,54 @@ export const useLikes = ({
   initialLikesCount = 0,
 }: UseLikesParams) => {
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
 
-  const [liked, setLiked] = useState(false);
-  const [likeId, setLikeId] = useState<string | null>(null);
-  const [likesCount, setLikesCount] = useState(initialLikesCount);
+  // Select post from store to get real-time likes
+  // We check all lists where the post might exist
+  const post = useAppSelector(state =>
+    state.posts.explore.find(p => p.$id === postId) ||
+    state.posts.reels.find(p => p.$id === postId) ||
+    (state.posts.currentPost?.$id === postId ? state.posts.currentPost : null)
+  );
+
+  const liked = post?.likes?.some(l => l.user === user?.$id || (l.user as any)?.$id === user?.$id) ?? false;
+  const likesCount = post?.likesCount ?? initialLikesCount;
+  const likeId = post?.likes?.find(l => l.user === user?.$id || (l.user as any)?.$id === user?.$id)?.$id;
+
   const [loading, setLoading] = useState(false);
 
-  // 🔄 Check if current user already liked the post
-  useEffect(() => {
-    if (!user || !postId) return;
-
-    const init = async () => {
-      const existing = await checkIsLiked(user.$id, postId);
-      if (existing) {
-        setLiked(true);
-        setLikeId(existing.$id);
-      }
-    };
-
-    init();
-  }, [user, postId]);
-
-  // ❤️ Toggle like / unlike
+  // Toggle like / unlike
   const toggleLike = async () => {
-    if (!user || loading) return;
+    if (!user) return; // Don't block on loading for optimistic UI, but maybe for spam prevention?
 
     try {
       setLoading(true);
 
-      if (liked && likeId) {
-        await unlikePost(likeId, postId);
-        setLiked(false);
-        setLikeId(null);
-        setLikesCount((c) => Math.max(0, c - 1));
-      } else {
-        const newLike = await likePost(user.$id, postId);
-        setLiked(true);
-        setLikeId(newLike.$id);
-        setLikesCount((c) => c + 1);
+      // 1. Optimistic Update
+      dispatch(toggleLikeOptimistic({ postId, userId: user.$id }));
+
+      // 2. Background API Call
+      await dispatch(togglePostLike({ postId, userId: user.$id, isLiked: liked, likeId })).unwrap();
+
+      // 3. Notification (only on like)
+      if (!liked && post?.leader) {
+        // Check if post.leader is an object or string
+        const leaderId = typeof post.leader === 'string' ? post.leader : post.leader.$id;
+
+        if (leaderId !== user.$id) {
+          await notificationService.create({
+            to: leaderId,
+            from: user.$id,
+            type: 'like',
+            post: postId,
+            text: 'liked your post',
+          });
+        }
       }
+
     } catch (err) {
       console.error('Like toggle failed', err);
+      // Rollback is handled in slice rejected case
     } finally {
       setLoading(false);
     }

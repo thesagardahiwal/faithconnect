@@ -4,9 +4,20 @@ import { store } from '@/store';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
 import "../global.css";
+
+// Disable strict mode to suppress "Reading from value during component render" warnings
+// which are often false positives or from dependencies.
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -121,7 +132,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
           </Stack>
-          <Toast/>
+          <Toast />
         </CustomSafeAreaView>
       </ErrorBoundary>
     </Provider>
